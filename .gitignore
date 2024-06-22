@@ -1,6 +1,8 @@
-
+# Build directories
 build/
-
 
 # Cmake Convenience Script
 run_cmake.sh
+
+# VSCode properties
+.vscode/
