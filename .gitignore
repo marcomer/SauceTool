@@ -1,0 +1,6 @@
+
+build/
+
+
+# Cmake Convenience Script
+run_cmake.sh
