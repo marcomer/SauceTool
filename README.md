@@ -14,7 +14,7 @@
     - [Writing](#writing)
     - [Removing](#removing)
     - [Performing Checks](#performing-checks)
-    - [Macros and Constants](#macros-and-constants)
+    - [Macros, Constants, and Helper Functions](#macros-constants-and-helper-functions)
 
 
 ## What is SAUCE?
@@ -125,7 +125,6 @@ Note that because CommentBlocks are *optional*, you must read the SAUCE record f
 
 
 ### Functions
-
 #### `SAUCE_fread(const char* filepath, const SAUCE* sauce)`
 - From a file, read a SAUCE record into `sauce`.
 
@@ -135,15 +134,14 @@ Note that because CommentBlocks are *optional*, you must read the SAUCE record f
 
 
 #### `SAUCE_read(const char* buffer, uint32_t n, const SAUCE* sauce)`
-- From a buffer containing file contents in the first `n` bytes, read a SAUCE record into `sauce`.
+- From the first `n` bytes of a buffer, read a SAUCE record into `sauce`.
 
 
 #### `SAUCE_Comment_read(const char* buffer, uint32_t n, const SAUCE_CommentBlock* block, uint8_t nLines)`
-- From a buffer containing file contents in the first `n` bytes, read `nLines` lines of a SAUCE CommentBlock into `block`.
+- From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`.
 
 
 ### Return Values
-
 On success, all read function will return 0. On an error, all read functions will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
 
 *Each* read function will return an error if the file or buffer are missing a SAUCE record. `SAUCE_fread()` and `SAUCE_read()` ignore SAUCE CommentBlocks and will therefore *not* return an error if a CommentBlock is missing. `SAUCE_Comment_fread()` and `SAUCE_Comment_read()` will return an error if the comment block is missing.
@@ -169,26 +167,24 @@ When writing a SAUCE record, the original "Comments" field will always remain un
 #### `SAUCE_fwrite(const char* filepath, const SAUCE* sauce)`
 - Write a SAUCE record to a file.
 - If the file already contains a SAUCE record, the record will be replaced.
+- An EOF character will be added if the file previously did not contain a SAUCE record.
 
 #### `SAUCE_Comment_fwrite(const char* filepath, const char* comment)`
 - Write a SAUCE CommentBlock to a file, replacing a CommentBlock if one already exists.
 - `comment` must be null-terminated.
-- If the file already contains a CommentBlock, the block will be replaced.
-- The "Comments" field of the file's SAUCE record will be updated to the new number comment lines.
+- The "Comments" field of the file's SAUCE record will be updated to the new number of comment lines.
 
 #### `SAUCE_write(const char* buffer, uint32_t n, const SAUCE* sauce)`
 - Write a SAUCE record to a buffer.
-- The first `n` bytes of the buffer are treated as the file contents.
-- If bytes `n-1` to `n-128` (the last 128 bytes of the buffer) contain a SAUCE record, the buffer's SAUCE record will be replaced. Otherwise, an EOF character and the new SAUCE record will be appended to the buffer at index `n`.
+- If the last 128 bytes of the buffer (bytes `n-1` to `n-128`) contain a SAUCE record, the buffer's SAUCE record will be replaced. Otherwise, the EOF character and the new SAUCE record will be appended to the buffer at index `n`.
 - **Important**: To prevent a buffer overflow error when appending a new record, the buffer's actual size must be at least `n` + 129 bytes (the size of a SAUCE record including an EOF character).
 
 #### `SAUCE_Comment_write(const char* buffer, uint32_t n, const char* comment)`
 - Write a SAUCE CommentBlock to a buffer, replacing a CommentBlock if one already exists.
 - `comment` must be null-terminated.
-- The first `n` bytes of the buffer are are treated as the file contents.
-- If bytes `n-1` to `n-128` (the last 128 bytes of the buffer) contain a SAUCE record, the block will be written. Otherwise, an error will be returned.
-- The "Comments" field of the buffer's SAUCE record will be updated to the new number comment lines.
-- **Important**: To prevent a buffer overflow error, the buffer's actual size must be at least the size of the contained file contents + `SAUCE_COMMENT_BLOCK_SIZE(nLines)` + 129 bytes (the size of a SAUCE record including an EOF character).
+- If the last 128 bytes of the buffer (bytes `n-1` to `n-128`) contain a SAUCE record, the CommentBlock will be written. Otherwise, an error will be returned.
+- The "Comments" field of the buffer's SAUCE record will be updated to the new number of comment lines.
+- **Important**: To prevent a buffer overflow error when writing a new comment, the buffer's actual size must be at least `n` + `SAUCE_COMMENT_BLOCK_SIZE(number of comment lines)`.
 
 
 ### Return Values
@@ -221,12 +217,11 @@ Note that if a function fails to remove a SAUCE record/comment, the file/buffer 
 - The "Comments" field of the file's SAUCE record will be set to 0.
 
 #### `SAUCE_remove(const char* buffer, uint32_t n)`
-- Remove a SAUCE Record from a buffer, along with the SAUCE CommentBlock if one exists.
-- The first `n` bytes of the buffer are are treated as the file contents.
+- Remove a SAUCE Record from the first `n` bytes of a buffer, along with the SAUCE CommentBlock if one exists.
+- The EOF character will be removed as well.
 
 #### `SAUCE_Comment_remove(const char* buffer, uint32_t n)`
-- Remove a SAUCE CommentBlock from a buffer.
-- The first `n` bytes of the buffer are are treated as the file contents.
+- Remove a SAUCE CommentBlock from the first `n` bytes of a buffer.
 - The "Comments" field of the buffer's SAUCE record will be set to 0.
 
 
@@ -244,25 +239,24 @@ Error codes that can be returned by remove functions include:
 
 
 ## Performing Checks
-Functions are provided to check if a file/buffer contains correct SAUCE data that adheres to the SAUCE specification. SAUCE data is considered correct if the end of a file/buffer contains an EOF character, an *optional* CommentBlock, and a SAUCE record. Since the CommentBlock is optional, the CommentBlock will only be checked for correctness if the corresponding SAUCE record's "Comments" field is greater than 0.
+Functions are provided to check if a file/buffer contains correct SAUCE data that adheres to the TODO: put link to requirements here? SAUCE specification. SAUCE data is considered correct if the end of a file/buffer contains an EOF character, an *optional* CommentBlock, and a SAUCE record. Since the CommentBlock is optional, the CommentBlock will only be checked for correctness if the corresponding SAUCE record's "Comments" field is greater than 0.
 
 
 ### Functions
 #### `SAUCE_check_file(const char* filepath)`
-- Check if a file has a SAUCE record with the correct, required fields (refer to Required Fields list).
-- If the SAUCE record claims that a CommentBlock exists, then the CommentBlock will also be checked.
+- Check if a file contains valid SAUCE data. 
+- This will check the SAUCE data against the SAUCE record and CommentBlock [requirements](#sauce-record-requirements).
 
 #### `SAUCE_check_buffer(const char* buffer, uint32_t n)`
-- Check if a buffer has a SAUCE record with the correct, required fields (refer to Required Fields list).
-- The first `n` bytes of the buffer are are treated as the file contents.
-- If the SAUCE record claims that a CommentBlock exists, then the CommentBlock will also be checked.
+- Check if the first `n` bytes of a buffer contain valid SAUCE data.
+- This will check the SAUCE data against the SAUCE record and CommentBlock [requirements](#sauce-record-requirements).
 
 
 ### Return Values
 The two functions above will return a 1 (true) if the file/buffer contains correct SAUCE data. If the file/buffer does **not** contain correct SAUCE data, then the two functions above will return a 0 (false). If 0 is returned, you can call `SAUCE_get_error()` to learn more about why the check failed.
 
 
-## Macros and Constants
+## Macros, Constants, and Helper Functions
 ### Macros
 - `SAUCE_COMMENT_LINE_LENGTH` - Length of a single Comment Line.
 - `SAUCE_RECORD_SIZE` - Size of a single SAUCE record in bytes.
@@ -275,3 +269,18 @@ An enum to help with identifying DataTypes. All constants start with `SAUCE_DT_`
 
 ### `SAUCE_FileType` enum
 An enum to help with identifying FileTypes. All constants start with `SAUCE_FT_` and are named according to the FileTypes listed in the [specs FileType table](https://www.acid.org/info/sauce/sauce.htm#FileType).
+
+
+### `SAUCE_get_error()`
+Get an error message about the last SAUCE error that occurred. An empty
+string will be returned if no SAUCE error has yet to occur.
+
+
+### `SAUCE_set_default(const SAUCE* sauce)`
+Fill a SAUCE struct with the default fields. ID and Version fields will be set
+to their required values. All other fields will be set to their defaults, which
+is typically 0 or spaces.
+
+
+### `SAUCE_num_comment_lines(const char* string)`
+Determine how many comment lines a string will need in order to place it in a CommentBlock.
