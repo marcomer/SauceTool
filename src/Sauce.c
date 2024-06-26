@@ -289,7 +289,26 @@ int SAUCE_check_buffer(const char* buffer, uint32_t n) {
  * @return 1 (true) if the records are equal; 0 (false) if the records are not equal
  */
 int SAUCE_equal(const SAUCE* first, const SAUCE* second) {
-  //TODO: implement first
+  if (first == second) return 1;
+
+  if (memcmp(first->ID, second->ID, 5) != 0) return 0;
+  if (memcmp(first->Version, second->Version, 2) != 0) return 0;
+  if (memcmp(first->Title, second->Title, 35) != 0) return 0;
+  if (memcmp(first->Author, second->Author, 20) != 0) return 0;
+  if (memcmp(first->Group, second->Group, 20) != 0) return 0;
+  if (memcmp(first->Date, second->Date, 8) != 0) return 0;
+  
+  if (strncmp(first->TInfoS, second->TInfoS, 22) != 0) return 0;
+
+  return first->FileSize == second->FileSize &&
+         first->DataType == second->DataType &&
+         first->FileType == second->FileType &&
+         first->TInfo1 == second->TInfo1 &&
+         first->TInfo2 == second->TInfo2 &&
+         first->TInfo3 == second->TInfo3 &&
+         first->TInfo4 == second->TInfo4 &&
+         first->Comments == second->Comments &&
+         first->TFlags == second->TFlags;
 }
 
 
@@ -302,5 +321,10 @@ int SAUCE_equal(const SAUCE* first, const SAUCE* second) {
  * @return 1 (true) if the CommentBlocks are equal; 0 (false) if the CommentBlocks are not equal
  */
 int SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second) {
-  //TODO: implement first
+  if (first == second) return 1;
+
+  if (memcmp(first->ID, second->ID, 5) != 0) return 0;
+  if (first->lines != second->lines) return 0;
+
+  return strncmp(first->comment, second->comment, first->lines * SAUCE_COMMENT_LINE_LENGTH) == 0;
 }
