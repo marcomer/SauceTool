@@ -42,7 +42,18 @@ void SAUCE_set_default(const SAUCE* sauce) {
  * @return how many lines the string will need
  */
 int SAUCE_num_comment_lines(const char* string) {
-  return 0;
+  int lines = 0;
+  int length = strlen(string);
+
+  if (length == 0) return 0; //handle empty string
+  if (length >= UINT8_MAX * SAUCE_COMMENT_LINE_LENGTH) return UINT8_MAX; // handle largest possible string
+
+  while (length > 0) {
+    lines++;
+    length -= SAUCE_COMMENT_LINE_LENGTH;
+  }
+
+  return lines;
 }
 
 
