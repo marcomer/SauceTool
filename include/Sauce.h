@@ -417,4 +417,26 @@ int SAUCE_check_file(const char* filepath);
 int SAUCE_check_buffer(const char* buffer, uint32_t n);
 
 
+/**
+ * @brief Check two SAUCE records for equality. SAUCE records are equal if
+ *        each field between the SAUCE records match.
+ * 
+ * @param first the first SAUCE struct
+ * @param second the second SAUCE struct
+ * @return 1 (true) if the records are equal; 0 (false) if the records are not equal
+ */
+int SAUCE_equal(const SAUCE* first, const SAUCE* second);
+
+
+/**
+ * @brief Check two SAUCE_CommentBlocks for equality. SAUCE_CommentBlocks are equal
+ *        if the content of each field match between the CommentBlocks.
+ * 
+ * @param first the first SAUCE struct
+ * @param second the second SAUCE struct
+ * @return 1 (true) if the CommentBlocks are equal; 0 (false) if the CommentBlocks are not equal
+ */
+int SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second);
+
+
 #endif //SAUCE_PARSE_HEADER_INCLUDED

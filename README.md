@@ -233,10 +233,16 @@ Functions are provided to check if a file/buffer contains correct SAUCE data tha
 - Check if the first `n` bytes of a buffer contain valid SAUCE data.
 - This will check the SAUCE data against the SAUCE record and CommentBlock [requirements](#sauce-record-requirements).
 
+#### `SAUCE_equal(const SAUCE* first, const SAUCE* second)`
+- Check two SAUCE records for equality.
+- SAUCE records are equal if each field between the SAUCE records match.
+
+#### `SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second)`
+- Check two SAUCE_CommentBlocks for equality.
+- SAUCE_CommentBlocks are equal if the content of each field match between the CommentBlocks.
 
 ### Return Values
-The two functions above will return a 1 (true) if the file/buffer contains correct SAUCE data. If the file/buffer does **not** contain correct SAUCE data, then the two functions above will return a 0 (false). If 0 is returned, you can call `SAUCE_get_error()` to learn more about why the check failed.
-
+The functions above will return a boolean value (1 for true, 0 for false). For `SAUCE_check_file()` and `SAUCE_check_buffer()`, if 0 is returned, you can call `SAUCE_get_error()` to learn more about why the check failed.
 
 
 
