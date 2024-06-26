@@ -169,6 +169,17 @@ enum SAUCE_FileType {
 
 
 
+// Error Codes
+
+#define SAUCE_EFOPEN    -1    // Could not open file
+#define SAUCE_ERMISS    -2    // SAUCE record could not be found
+#define SAUCE_ECMISS    -3    // SAUCE CommentBlock could not be found
+#define SAUCE_ESHORT    -4    // The given file/buffer was too short to contain a record
+#define SAUCE_ENULL     -5    // A given pointer was NULL
+#define SAUCE_EFFAIL    -6    // A file operation failed
+
+
+
 
 // Helper Functions
 

@@ -146,13 +146,6 @@ On success, all read function will return 0. On an error, all read functions wil
 
 *Each* read function will return an error if the file or buffer are missing a SAUCE record. `SAUCE_fread()` and `SAUCE_read()` ignore SAUCE CommentBlocks and will therefore *not* return an error if a CommentBlock is missing. `SAUCE_Comment_fread()` and `SAUCE_Comment_read()` will return an error if the comment block is missing.
 
-Error codes that can be returned by read functions include:
-- `SAUCE_EFOPEN` - Could not open file
-- `SAUCE_ERMISS` - SAUCE record is missing
-- `SAUCE_ECMISS` - SAUCE CommentBlock is missing (only ever returned by the Comment read functions)
-- `SAUCE_EINCOMP` - SAUCE is incomplete, meaning only part of it exists
-- `SAUCE_EBUFSHORT` - The given buffer length is too short
-- `SAUCE_EFFAIL` - A file read operation failed
 
 
 
@@ -192,12 +185,6 @@ On success, all **file** write functions will return 0. On error, all **file** w
 
 On success, all **buffer** write functions will return the new length of the buffer. On error, all **buffer** write functions will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
 
-Error codes that can be returned by write functions include:
-- `SAUCE_EFOPEN` - Could not open file
-- `SAUCE_ERMISS` - SAUCE record is missing
-- `SAUCE_EINCOMP` - SAUCE is incomplete, meaning only part of it exists
-- `SAUCE_EBUFSHORT` - The given buffer length is too short
-- `SAUCE_EFFAIL` - A file read/write operation failed
 
 
 
@@ -230,17 +217,11 @@ On success, all **file** remove functions will return 0. On error, all **file** 
 
 On success, all **buffer** remove functions will return the new length of the buffer. On error, all **buffer** remove functions will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
 
-Error codes that can be returned by remove functions include:
-- `SAUCE_EFOPEN` - Could not open file
-- `SAUCE_ERMISS` - SAUCE record could not be found
-- `SAUCE_ECMISS` - SAUCE CommentBlock could not be found
-- `SAUCE_EBUFSHORT` - The given buffer length is too short
-- `SAUCE_EFFAIL` - A file read/write operation failed
+
 
 
 ## Performing Checks
 Functions are provided to check if a file/buffer contains correct SAUCE data that adheres to the TODO: put link to requirements here? SAUCE specification. SAUCE data is considered correct if the end of a file/buffer contains an EOF character, an *optional* CommentBlock, and a SAUCE record. Since the CommentBlock is optional, the CommentBlock will only be checked for correctness if the corresponding SAUCE record's "Comments" field is greater than 0.
-
 
 ### Functions
 #### `SAUCE_check_file(const char* filepath)`
@@ -254,6 +235,8 @@ Functions are provided to check if a file/buffer contains correct SAUCE data tha
 
 ### Return Values
 The two functions above will return a 1 (true) if the file/buffer contains correct SAUCE data. If the file/buffer does **not** contain correct SAUCE data, then the two functions above will return a 0 (false). If 0 is returned, you can call `SAUCE_get_error()` to learn more about why the check failed.
+
+
 
 
 ## Macros, Constants, and Helper Functions
@@ -284,3 +267,13 @@ is typically 0 or spaces.
 
 ### `SAUCE_num_comment_lines(const char* string)`
 Determine how many comment lines a string will need in order to place it in a CommentBlock.
+
+
+## Error Codes
+Most functions will return an error code if an error occurs. Remember that you can call `SAUCE_get_error()` to learn more about an error that occurred.
+- `SAUCE_EFOPEN` - Could not open a file
+- `SAUCE_ERMISS` - SAUCE record could not be found
+- `SAUCE_ECMISS` - SAUCE CommentBlock could not be found
+- `SAUCE_ESHORT` - The given file/buffer was too short to contain a record
+- `SAUCE_ENULL` - A given pointer was NULL
+- `SAUCE_EFFAIL` - A file operation failed
