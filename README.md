@@ -126,19 +126,19 @@ Note that because CommentBlocks are *optional*, you must read the SAUCE record f
 
 
 ### Functions
-#### `SAUCE_fread(const char* filepath, const SAUCE* sauce)`
+#### `SAUCE_fread(const char* filepath, SAUCE* sauce)`
 - From a file, read a SAUCE record into `sauce`.
 
 
-#### `SAUCE_Comment_fread(const char* filepath, const SAUCE_CommentBlock* block, uint8_t nLines)`
+#### `SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines)`
 - From a file, read `nLines` lines of a SAUCE CommentBlock into `block`.
 
 
-#### `SAUCE_read(const char* buffer, uint32_t n, const SAUCE* sauce)`
+#### `SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce)`
 - From the first `n` bytes of a buffer, read a SAUCE record into `sauce`.
 
 
-#### `SAUCE_Comment_read(const char* buffer, uint32_t n, const SAUCE_CommentBlock* block, uint8_t nLines)`
+#### `SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines)`
 - From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`.
 
 
@@ -266,7 +266,7 @@ An enum to help with identifying FileTypes. All FileType constants start with `S
 Get an error message about the last SAUCE error that occurred. An empty
 string will be returned if no SAUCE error has yet to occur.
 
-### `SAUCE_set_default(const SAUCE* sauce)`
+### `SAUCE_set_default(SAUCE* sauce)`
 Fill a SAUCE struct with the default fields. ID and Version fields will be set
 to their required values. All other fields will be set to their defaults, which
 is typically 0 or spaces.

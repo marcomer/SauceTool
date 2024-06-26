@@ -198,7 +198,7 @@ const char* SAUCE_get_error(void);
  * 
  * @param sauce a SAUCE struct to be set
  */
-void SAUCE_set_default(const SAUCE* sauce);
+void SAUCE_set_default(SAUCE* sauce);
 
 
 /**
@@ -224,7 +224,7 @@ int SAUCE_num_comment_lines(const char* string);
  * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_fread(const char* filepath, const SAUCE* sauce);
+int SAUCE_fread(const char* filepath, SAUCE* sauce);
 
 
 /**
@@ -236,7 +236,7 @@ int SAUCE_fread(const char* filepath, const SAUCE* sauce);
  * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_fread(const char* filepath, const SAUCE_CommentBlock* block, uint8_t nLines);
+int SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines);
 
 
 /**
@@ -248,7 +248,7 @@ int SAUCE_Comment_fread(const char* filepath, const SAUCE_CommentBlock* block, u
  * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_read(const char* buffer, uint32_t n, const SAUCE* sauce);
+int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce);
 
 
 /**
@@ -261,7 +261,7 @@ int SAUCE_read(const char* buffer, uint32_t n, const SAUCE* sauce);
  * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_read(const char* buffer, uint32_t n, const SAUCE_CommentBlock* block, uint8_t nLines);
+int SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines);
 
 
 
