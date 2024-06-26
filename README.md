@@ -14,7 +14,8 @@
     - [Writing](#writing)
     - [Removing](#removing)
     - [Performing Checks](#performing-checks)
-    - [Macros, Constants, and Helper Functions](#macros-constants-and-helper-functions)
+    - [Constants and Helper Functions](#constants-and-helper-functions)
+    - [Error Codes](#error-codes)
 
 
 ## What is SAUCE?
@@ -239,34 +240,34 @@ The two functions above will return a 1 (true) if the file/buffer contains corre
 
 
 
-## Macros, Constants, and Helper Functions
-### Macros
-- `SAUCE_COMMENT_LINE_LENGTH` - Length of a single Comment Line.
-- `SAUCE_RECORD_SIZE` - Size of a single SAUCE record in bytes.
-- `SAUCE_COMMENT_BLOCK_SIZE(lines)` - Function that determines how large a CommentBlock will be in bytes according to the number of lines present.
+## Constants, and Helper Functions
+### `SAUCE_COMMENT_LINE_LENGTH` constant
+Length of a single Comment Line in bytes
 
+### `SAUCE_RECORD_SIZE` constant
+The size of a SAUCE record in bytes
+
+### `SAUCE_COMMENT_BLOCK_SIZE(lines)` macro function
+Function that determines how large a CommentBlock will be in bytes according to the number of lines present.
 
 ### `SAUCE_DataType` enum 
-An enum to help with identifying DataTypes. All constants start with `SAUCE_DT_` and are named according to the DataTypes listed in the [specs](https://www.acid.org/info/sauce/sauce.htm).
-
+An enum to help with identifying DataTypes. All DataType constants start with `SAUCE_DT_` and are named according to the DataTypes listed in the [specs](https://www.acid.org/info/sauce/sauce.htm).
 
 ### `SAUCE_FileType` enum
-An enum to help with identifying FileTypes. All constants start with `SAUCE_FT_` and are named according to the FileTypes listed in the [specs FileType table](https://www.acid.org/info/sauce/sauce.htm#FileType).
-
+An enum to help with identifying FileTypes. All FileType constants start with `SAUCE_FT_` and are named according to the FileTypes listed in the [specs FileType table](https://www.acid.org/info/sauce/sauce.htm#FileType).
 
 ### `SAUCE_get_error()`
 Get an error message about the last SAUCE error that occurred. An empty
 string will be returned if no SAUCE error has yet to occur.
-
 
 ### `SAUCE_set_default(const SAUCE* sauce)`
 Fill a SAUCE struct with the default fields. ID and Version fields will be set
 to their required values. All other fields will be set to their defaults, which
 is typically 0 or spaces.
 
-
 ### `SAUCE_num_comment_lines(const char* string)`
 Determine how many comment lines a string will need in order to place it in a CommentBlock.
+
 
 
 ## Error Codes
