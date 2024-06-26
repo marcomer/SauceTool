@@ -1,5 +1,5 @@
 #include "Sauce.h"
-
+#include <string.h>
 
 // Helper Functions
 
@@ -21,7 +21,16 @@ const char* SAUCE_get_error(void) {
  * @param sauce a SAUCE struct to be set
  */
 void SAUCE_set_default(const SAUCE* sauce) {
-  //TODO: implement first
+  memset(sauce, 0, sizeof(SAUCE)); // zero everything out
+
+  memcpy(sauce->ID, "SAUCE", 5);
+  memcpy(sauce->Version, "00", 2);
+
+  // set the character fields to spaces
+  memset(sauce->Title, ' ', sizeof(sauce->Title));
+  memset(sauce->Author, ' ', sizeof(sauce->Author));
+  memset(sauce->Group, ' ', sizeof(sauce->Group));
+  memset(sauce->Date, ' ', sizeof(sauce->Date));
 }
 
 
