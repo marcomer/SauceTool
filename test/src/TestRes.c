@@ -41,6 +41,7 @@ SAUCE* test_get_testfile1_expected_record() {
   return &expected;
 }
 
+
 SAUCE_CommentBlock* test_get_testfile1_expected_comment() {
   static SAUCE_CommentBlock block;
   static char string[128];
@@ -52,4 +53,25 @@ SAUCE_CommentBlock* test_get_testfile1_expected_comment() {
   block.comment = string;
 
   return &block;
+}
+
+
+SAUCE* test_get_testfile2_expected_record() {
+  static SAUCE expected;
+  SAUCE_set_default(&expected);
+  memcpy(expected.Title, "TestFile2", 9);
+  memcpy(expected.Author, "marcomer", 8);
+  memcpy(expected.Date, "20240627", 8);
+  expected.FileSize = 0;
+  expected.DataType = 1;
+  expected.FileType = 1;
+  expected.TInfo1 = 0x01;
+  expected.TInfo2 = 0x01;
+  expected.TInfo3 = 0;
+  expected.TInfo4 = 0;
+  expected.Comments = 0;
+  expected.TFlags = 0x02;
+  memcpy(expected.TInfoS, "IBM VGA", 7);
+  
+  return &expected;
 }
