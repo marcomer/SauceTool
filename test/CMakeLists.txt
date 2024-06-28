@@ -27,3 +27,12 @@ add_test(
   NAME RecordReadTest
   COMMAND RecordReadTest
 )
+
+
+
+# Add a custom target that copies the expect/ directory to the test binary directory
+add_custom_target(copy_expect ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+    ${CMAKE_SOURCE_DIR}/test/expect ${CMAKE_CURRENT_BINARY_DIR}/expect
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
