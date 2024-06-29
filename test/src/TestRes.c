@@ -1,6 +1,7 @@
 #include "TestRes.h"
 #include <string.h>
 
+
 const SAUCE default_record = {
   .ID = {'S','A','U','C','E'},
   .Version = {'0','0'},
@@ -19,6 +20,17 @@ const SAUCE default_record = {
   .TFlags = 0,
   .TInfoS = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,}
 };
+
+
+// Get the file size of an open file. Will rewind the file.
+long getFileSize(FILE* file) {
+  fseek(file, 0, SEEK_END);
+  long size = ftell(file);
+  rewind(file);
+  return size;
+}
+
+
 
 
 SAUCE* test_get_testfile1_expected_record() {
@@ -74,4 +86,99 @@ SAUCE* test_get_testfile2_expected_record() {
   memcpy(expected.TInfoS, "IBM VGA", 7);
   
   return &expected;
+}
+
+
+
+
+int test_file_matches_expected(FILE* actual, const char* expected_filepath) {
+  long actualSize = getFileSize(actual);
+
+  FILE* expected = fopen(expected_filepath, "rb");
+  if (expected == NULL) {
+    fprintf(stderr, "Failed to open %s", expected_filepath);
+    return 0;
+  }
+
+  long expectedSize = getFileSize(expected);
+
+  char expectedBuf[expectedSize];
+  char actualBuf[actualSize];
+
+  // compare file sizes
+  if (expectedSize != actualSize) {
+    fprintf(stderr, "Expected file size != actual file size");
+    goto failed;
+  }
+
+  // get file contents
+  int read = fread(expectedBuf, 1, expectedSize, expected);
+  if (read != expectedSize) {
+    fprintf(stderr, "Failed to read all of expected file");
+    goto failed;
+  }
+
+  read = fread(actualBuf, 1, actualSize, actual);
+  if (read != actualSize) {
+    fprintf(stderr, "Failed to read all of actual file");
+    goto failed;
+  }
+
+  // get file contents
+  if (memcmp(expectedBuf, actualBuf, expectedSize) != 0) {
+    fprintf(stderr, "Failed to read all of actual file");
+    goto failed;
+  }
+
+  // success, return true
+  fclose(expected);
+  return 1;
+
+
+  // failure case
+  failed:
+  fclose(expected);
+  return 0;
+}
+
+
+int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* expected_filepath) {
+  FILE* expected = fopen(expected_filepath, "rb");
+  if (expected == NULL) {
+    fprintf(stderr, "Failed to open %s", expected_filepath);
+    return 0;
+  }
+
+  long expectedSize = getFileSize(expected);
+
+  char expectedBuf[expectedSize];
+
+  // compare file sizes
+  if (expectedSize != n) {
+    fprintf(stderr, "Expected file size != actual file size");
+    goto failed;
+  }
+
+  // get file contents
+  int read = fread(expectedBuf, 1, expectedSize, expected);
+  if (read != expectedSize) {
+    fprintf(stderr, "Failed to read all of expected file");
+    goto failed;
+  }
+
+  // get file contents
+  if (memcmp(expectedBuf, buffer, expectedSize) != 0) {
+    fprintf(stderr, "Failed to read all of actual file");
+    goto failed;
+  }
+
+  // success, return true
+  fclose(expected);
+  return 1;
+
+
+  // failure case
+  failed:
+  fclose(expected);
+  return 0;
 }
