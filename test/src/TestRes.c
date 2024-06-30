@@ -91,19 +91,29 @@ SAUCE* test_get_testfile2_expected_record() {
 
 
 
-int test_file_matches_expected(FILE* actual, const char* expected_filepath) {
-  long actualSize = getFileSize(actual);
-
-  FILE* expected = fopen(expected_filepath, "rb");
-  if (expected == NULL) {
-    fprintf(stderr, "Failed to open %s", expected_filepath);
+int test_file_matches_expected(const char* actual_filepath, const char* expected_filepath) {
+  // open the actual file
+  FILE* actual = fopen(actual_filepath, "rb");
+  if (actual == NULL) {
+    fprintf(stderr, "Failed to open %s", actual_filepath);
     return 0;
   }
 
+  // open the expected file
+  FILE* expected = fopen(expected_filepath, "rb");
+  if (expected == NULL) {
+    fprintf(stderr, "Failed to open %s", expected_filepath);
+    fclose(actual);
+    return 0;
+  }
+
+  // get the file sizes
+  long actualSize = getFileSize(actual);
   long expectedSize = getFileSize(expected);
 
-  char expectedBuf[expectedSize];
+  // define file buffers
   char actualBuf[actualSize];
+  char expectedBuf[expectedSize];
 
   // compare file sizes
   if (expectedSize != actualSize) {
@@ -111,32 +121,36 @@ int test_file_matches_expected(FILE* actual, const char* expected_filepath) {
     goto failed;
   }
 
-  // get file contents
-  int read = fread(expectedBuf, 1, expectedSize, expected);
-  if (read != expectedSize) {
-    fprintf(stderr, "Failed to read all of expected file");
-    goto failed;
-  }
 
-  read = fread(actualBuf, 1, actualSize, actual);
+  // get actual file contents
+  int read = fread(actualBuf, 1, actualSize, actual);
   if (read != actualSize) {
     fprintf(stderr, "Failed to read all of actual file");
     goto failed;
   }
 
-  // get file contents
+  // get expected file contents
+  read = fread(expectedBuf, 1, expectedSize, expected);
+  if (read != expectedSize) {
+    fprintf(stderr, "Failed to read all of expected file");
+    goto failed;
+  }
+
+  // compare file contents
   if (memcmp(expectedBuf, actualBuf, expectedSize) != 0) {
     fprintf(stderr, "Failed to read all of actual file");
     goto failed;
   }
 
   // success, return true
+  fclose(actual);
   fclose(expected);
   return 1;
 
 
   // failure case
   failed:
+  fclose(actual);
   fclose(expected);
   return 0;
 }
@@ -180,5 +194,44 @@ int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* exp
   // failure case
   failed:
   fclose(expected);
+  return 0;
+}
+
+
+int copy_file(const char* src, const char* dest) {
+  FILE* srcFile = fopen(src, "rb");
+  if (srcFile == NULL) {
+    fprintf(stderr, "Could not open %s", src);
+    return -1;
+  }
+
+  FILE* destFile = fopen(dest, "wb");
+  if (destFile == NULL) {
+    fprintf(stderr, "Could not open %s", dest);
+    fclose(srcFile);
+    return -1;
+  }
+
+
+  // copy the file over
+  char buffer[1024];
+  int read = 1;
+  int write = 0;
+  while(read > 0) {
+    read = fread(buffer, 1, 1024, srcFile);
+    if (read <= 0) {
+      break;
+    }
+    write = fwrite(buffer, 1, read, destFile);
+    if (write != read) {
+      fclose(srcFile);
+      fclose(destFile);
+      return -1;
+    }
+  }
+
+
+  fclose(srcFile);
+  fclose(destFile);
   return 0;
 }
