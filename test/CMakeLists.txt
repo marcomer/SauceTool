@@ -14,6 +14,7 @@ add_test(
   COMMAND HelperFunctionTest
 )
 
+
 # Initialize RecordReadTest suite
 add_executable(RecordReadTest
   src/RecordReadTest.c
@@ -28,6 +29,7 @@ add_test(
   COMMAND RecordReadTest
 )
 
+
 # Initialize RecordWriteTest suite
 add_executable(RecordWriteTest
   src/RecordWriteTest.c
@@ -40,6 +42,21 @@ target_link_libraries(RecordWriteTest
 add_test(
   NAME RecordWriteTest
   COMMAND RecordWriteTest
+)
+
+
+# Initialize RecordRemoveTest suite
+add_executable(RecordRemoveTest
+  src/RecordRemoveTest.c
+  src/TestRes.c
+)
+target_link_libraries(RecordRemoveTest
+  Sauce
+  Unity
+)
+add_test(
+  NAME RecordRemoveTest
+  COMMAND RecordRemoveTest
 )
 
 
