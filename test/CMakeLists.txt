@@ -28,6 +28,20 @@ add_test(
   COMMAND RecordReadTest
 )
 
+# Initialize RecordWriteTest suite
+add_executable(RecordWriteTest
+  src/RecordWriteTest.c
+  src/TestRes.c
+)
+target_link_libraries(RecordWriteTest
+  Sauce
+  Unity
+)
+add_test(
+  NAME RecordWriteTest
+  COMMAND RecordWriteTest
+)
+
 
 
 # Add a custom target that copies the expect/ directory to the test binary directory
