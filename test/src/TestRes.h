@@ -17,8 +17,11 @@
 // No Sauce File -> File does not contain any SAUCE info
 #define SAUCE_NOSAUCE_PATH      "expect/NoSauce.txt"
 
-// ShortFile -> File under 128 bytes
-#define SAUCE_SHORTFILE_PATH    "test/res/ShortFile.txt"
+// ShortFile -> File under 128 bytes FIXME: change limit to 129 bytes to include EOF?
+#define SAUCE_SHORTFILE_PATH    "expect/ShortFile.txt"
+
+// SauceButNoEOF -> TestFile1 with a missing EOF character
+#define SAUCE_SAUCEBUTNOEOF_PATH  "expect/SauceButNoEOF.ans"
 
 
 // Expected write file results. These files should not be changed
@@ -71,7 +74,10 @@ int test_file_matches_expected(const char* actual_filepath, const char* expected
 // Return true on a complete match, false if otherwise.
 int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* expected_filepath);
 
-// Copy a file from a src file to a dest file.
+// Copy a file from a src file to a dest file. Return 0 on success
 int copy_file(const char* src, const char* dest);
+
+// Copy the contents of a src file to a buffer. Return total bytes read on success.
+int copy_file_into_buffer(const char* srcFile, const char* buffer);
 
 #endif //SAUCE_TEST_RES_HEADER_INCLUDED

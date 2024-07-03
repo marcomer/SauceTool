@@ -241,3 +241,26 @@ int copy_file(const char* src, const char* dest) {
   fclose(destFile);
   return 0;
 }
+
+
+
+int copy_file_into_buffer(const char* srcFile, const char* buffer) {
+  FILE* file = fopen(srcFile, "rb");
+  if (file == NULL) {
+    fprintf(stderr, "Could not open %s", srcFile);
+    return -1;
+  }
+
+  int read;
+  int total = 0;
+  while (1) {
+    read = fread(buffer + total, 1, 256, file);
+    if (read <= 0) {
+      break;
+    }
+    total += read;
+  }
+  
+  fclose(srcFile);
+  return total;
+}
