@@ -35,9 +35,9 @@ void setUp() {
   set_sauce(&sauce);
 
   // clear the write_actual file
-  FILE* write_actual = fopen("expect/actual/write_actual.txt", "w");
+  FILE* write_actual = fopen(SAUCE_WRITE_ACTUAL_PATH, "w");
   if (write_actual == NULL) {
-    fprintf(stderr, "Failed to open expect/actual/write_actual.txt");
+    fprintf(stderr, "Failed to open %s", SAUCE_WRITE_ACTUAL_PATH);
     exit(1);
   }
   fclose(write_actual);
@@ -170,6 +170,21 @@ void should_FailToWrite_when_FileDoesNotExist() {
 }
 
 
+void should_FailToWrite_when_FilePathIsNull() {
+  int res = SAUCE_fwrite(NULL, &sauce);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
+
+
+// Buffer fail cases
+void should_FailToWrite_when_BufferIsNull() {
+  int res = SAUCE_write(NULL, 256, &sauce);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
 
 
 
@@ -183,6 +198,8 @@ int main(int argc, char** argv) {
   RUN_TEST(should_AppendToBuffer_when_BufferContainsContent);
   RUN_TEST(should_ReplaceSAUCE_when_BufferContainsSAUCE);
   RUN_TEST(should_FailToWrite_when_FileDoesNotExist);
+  RUN_TEST(should_FailToWrite_when_FilePathIsNull);
+  RUN_TEST(should_FailToWrite_when_BufferIsNull);
 
   return UNITY_END();
 }
