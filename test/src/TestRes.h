@@ -11,6 +11,9 @@
 // TestFile2 -> File only containing a SAUCE record
 #define SAUCE_TESTFILE2_PATH    "expect/TestFile2.ans"
 
+// TestFile3 -> File containing original file contents and a SAUCE record (w/ no comment)
+#define SAUCE_TESTFILE3_PATH    "expect/TestFile3.ans"
+
 // No Sauce File -> File does not contain any SAUCE info
 #define SAUCE_NOSAUCE_PATH      "expect/NoSauce.txt"
 
@@ -32,6 +35,21 @@
 // File to contain the actual results of a test write
 #define SAUCE_WRITE_ACTUAL_PATH   "expect/actual/write_actual.txt"
 
+
+
+// Expected remove file results. These files should not be changed
+
+// Result of removing a SAUCE record from TestFile3.ans
+#define SAUCE_REMOVE_ONLY_RECORD_PATH "expect/remove/RemoveOnlyRecord.txt"
+
+// Result of removing a SAUCE record and CommentBlock from TestFile1.ans
+#define SAUCE_REMOVE_RECORD_AND_COMMENT_PATH  "expect/remove/RemoveBoth.txt"
+
+// File to contain the actual results of a test remove
+#define SAUCE_REMOVE_ACTUAL_PATH  "expect/actual/remove_actual.txt"
+
+
+
 // The expected result of SAUCE_set_default
 extern const SAUCE default_record;
 
@@ -42,7 +60,7 @@ SAUCE_CommentBlock* test_get_testfile1_expected_comment();
 
 SAUCE* test_get_testfile2_expected_record();
 
-
+SAUCE* test_get_testfile3_expected_record();
 
 
 // Test if a file's contents match another file's contents.

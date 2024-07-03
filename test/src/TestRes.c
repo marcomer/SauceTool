@@ -89,6 +89,12 @@ SAUCE* test_get_testfile2_expected_record() {
 }
 
 
+SAUCE* test_get_testfile3_expected_record() {
+  return test_get_testfile2_expected_record();
+}
+
+
+
 
 
 int test_file_matches_expected(const char* actual_filepath, const char* expected_filepath) {
