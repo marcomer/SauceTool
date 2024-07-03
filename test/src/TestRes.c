@@ -244,7 +244,7 @@ int copy_file(const char* src, const char* dest) {
 
 
 
-int copy_file_into_buffer(const char* srcFile, const char* buffer) {
+int copy_file_into_buffer(const char* srcFile, char* buffer) {
   FILE* file = fopen(srcFile, "rb");
   if (file == NULL) {
     fprintf(stderr, "Could not open %s", srcFile);
@@ -261,6 +261,6 @@ int copy_file_into_buffer(const char* srcFile, const char* buffer) {
     total += read;
   }
   
-  fclose(srcFile);
+  fclose(file);
   return total;
 }

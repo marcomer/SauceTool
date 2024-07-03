@@ -78,6 +78,6 @@ int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* exp
 int copy_file(const char* src, const char* dest);
 
 // Copy the contents of a src file to a buffer. Return total bytes read on success.
-int copy_file_into_buffer(const char* srcFile, const char* buffer);
+int copy_file_into_buffer(const char* srcFile, char* buffer);
 
 #endif //SAUCE_TEST_RES_HEADER_INCLUDED
