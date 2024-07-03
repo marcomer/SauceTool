@@ -86,6 +86,12 @@ void should_FailOnReadFile_when_FileIsTooShort() {
 }
 
 
+void should_FailOnReadFile_when_FilePathIsNull() {
+  int res = SAUCE_fread(NULL, &actual);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
 
 
 // Buffer failure cases
@@ -110,7 +116,7 @@ void should_FailOnReadBuffer_when_BufferLengthIsTooShort() {
 
 
 void should_FailOnReadBuffer_when_BufferIsNULL() {
-  int res = SAUCE_read(NULL, 128, &actual);
+  int res = SAUCE_read(NULL, 256, &actual);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
 }
 
@@ -169,6 +175,7 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailOnReadFile_when_SAUCEIsMissing);
   RUN_TEST(should_FailOnReadFile_when_SAUCEPointerIsNull);
   RUN_TEST(should_FailOnReadFile_when_FileIsTooShort);
+  RUN_TEST(should_FailOnReadFile_when_FilePathIsNull);
   RUN_TEST(should_FailOnReadBuffer_when_SAUCEIsMissing);
   RUN_TEST(should_FailOnReadBuffer_when_BufferLengthIsTooShort);
   RUN_TEST(should_FailOnReadBuffer_when_BufferIsNULL);
