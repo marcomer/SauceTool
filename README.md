@@ -5,6 +5,7 @@
 2. Core Ideas
     - [Summary](#summary)
     - [Assumptions To Keep In Mind](#assumptions-to-keep-in-mind)
+    - [The EOF Character](#the-eof-character)
     - SAUCE Requirements
         - [SAUCE Record Requirements](#sauce-record-requirements)
         - [CommentBlock Requirements](#commentblock-requirements)
@@ -21,7 +22,7 @@
 ## What is SAUCE?
 SAUCE, the Standard Architecture for Universal Comment Extensions, is a protocol for attaching meta data or comments to files. It is mainly intended for ANSI art files, but it can used for many different file types. 
 
-SAUCE has 4 parts: The original file contents, an End-Of-File or EOF character (Decimal 26, Hex 1A, Ctrl+Z), an optional comment block and the SAUCE record. A SAUCE record should make up the last 128 bytes of a files.
+SAUCE has 4 parts: The original file contents, an End-Of-File or [EOF character](#the-eof-character) (Decimal 26, Hex 1A, Ctrl+Z), an optional comment block and the SAUCE record. A SAUCE record should make up the last 128 bytes of a files.
 
 You can see the [official specification](https://www.acid.org/info/sauce/sauce.htm) by Olivier "Tasmaniac" Reubens / ACiD for more information on interpreting SAUCE records.
 
@@ -48,11 +49,21 @@ You can refer to the [Table of Contents](#table-of-contents) to navigate to the 
 6. Unexpected behavior may occur if your file/buffer contains invalid, misplaced, or otherwise non-standard SAUCE records/comments.
 
 
+
+## The EOF Character
+SAUCE specifies that an EOF character (Decimal 26, Hex 1A, Ctrl+Z) should be placed immediately before the SAUCE data as a way to prevent a text/file viewer from reading the SAUCE data as text.
+
+Although EOF characters are important for text/file viewers, this library specifies that an EOF char is *not* required to **read** or **perform checks** on any SAUCE information. Refer to the [requirements](#sauce-record-requirements) section below for what is required for reading and performing checks.
+
+When **writing** a SAUCE record, an EOF character will be added if an EOF character does not already exist.
+
+When **removing** a SAUCE record, if an EOF character exists immediately before the SAUCE data, then the EOF character will be removed.
+
+
+
 ## SAUCE Record Requirements
 A SAUCE record must have the following attributes:
-- It must be 128 bytes large.
 - It must make up the last 128 bytes of a file.
-- There must be an EOF character immediately before the record. If there is a CommentBlock, the EOF character must be immediately before the CommentBlock.
 - If there is a CommentBlock, the record must be immediately after the CommentBlock.
 - The DataType and FileType fields must be a valid pair.
 
@@ -70,7 +81,6 @@ The CommentBlock must have the following attributes:
 - The block's **ID field** must be equal to "COMNT".
 - The number of lines must be equal to the **Comments** field in the corresponding SAUCE record.
 - Each line must be 64 bytes long.
-- There must be an EOF character immediately before the CommentBlock.
 - The CommentBlock must be immediately before the SAUCE record.
 
 
