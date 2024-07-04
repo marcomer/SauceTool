@@ -9,6 +9,7 @@
     - SAUCE Requirements
         - [SAUCE Record Requirements](#sauce-record-requirements)
         - [CommentBlock Requirements](#commentblock-requirements)
+    - [Limitations](#limitations)
 3. Usage
     - [Data Structures](#data-structures)
     - [Reading](#reading)
@@ -37,7 +38,7 @@ This library provides functions to access and modify files and buffer arrays of 
 
 There are 2 distinct sets of functions for **files** and for **buffer** arrays. Functions that access **files** follow a similiar naming convention to the C std I/O File library (e.g. `SAUCE_fread()`, `SAUCE_Comment_fwrite()`, etc.). Functions that access **buffers** have similiar names but are missing the `f` character (e.g. `SAUCE_read()`, `SAUCE_Comment_write()`, etc.).
 
-You can refer to the [Table of Contents](#table-of-contents) to navigate to the relevant documentation section.
+See the Usage section in the [Table of Contents](#table-of-contents) for info on how to use this library.
 
 
 ## Assumptions To Keep In Mind
@@ -82,6 +83,16 @@ The CommentBlock must have the following attributes:
 - The number of lines must be equal to the **Comments** field in the corresponding SAUCE record.
 - Each line must be 64 bytes long.
 - The CommentBlock must be immediately before the SAUCE record.
+
+
+
+## Limitations
+This library is designed for common x86 operating systems (i.e. Windows, MacOS, and Linux), so exotic systems may have unexpected behavior. This library relies on the C standard library and POSIX functions.
+
+Currently, files over 2GB are not supported. 
+
+Checking or validating any of the SAUCE record fields which are marked as *not required* by the [SAUCE Layout table](https://www.acid.org/info/sauce/sauce.htm), with the exception of the `Comments` field, are beyond the scope of this project.
+
 
 
 ## Data Structures
