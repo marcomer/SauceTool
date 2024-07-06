@@ -134,9 +134,6 @@ void should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsSAUCEWithNoEOF() {
 // Buffer success cases
 
 void should_WriteToBuffer_when_BufferLengthIsZero() {
-  char buffer[256];
-  memset(buffer, 0, 256);
-
   int res = SAUCE_write(buffer, 0, &sauce);
   TEST_ASSERT_EQUAL_INT(129, res);
 
@@ -146,58 +143,33 @@ void should_WriteToBuffer_when_BufferLengthIsZero() {
 
 void should_AppendToBuffer_when_BufferContainsContent() {
   // copy NoSauce.txt into buffer
-  char buffer[1024];
-  FILE* file = fopen(SAUCE_NOSAUCE_PATH, "rb");
-  if (file == NULL) {
-    TEST_FAIL_MESSAGE("Could not open "SAUCE_NOSAUCE_PATH);
+  int length = copy_file_into_buffer(SAUCE_NOSAUCE_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy NoSauce.txt into the buffer");
     return;
   }
-
-  int read;
-  uint32_t total = 0;
-  while (1) {
-    read = fread(buffer + total, 1, 256, file);
-    if (read <= 0) {
-      break;
-    }
-    total += read;
-  }
-  fclose(file);
-
   
   // append to buffer
-  int res = SAUCE_write(buffer, total, &sauce);
-  TEST_ASSERT_EQUAL(total + 129, res);
+  int res = SAUCE_write(buffer, length, &sauce);
+  TEST_ASSERT_EQUAL(length + 129, res);
 
-  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, total + 129, SAUCE_APPEND_PATH));
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length + 129, SAUCE_APPEND_PATH));
 }
 
 
 void should_ReplaceSAUCE_when_BufferContainsSAUCE() {
   // copy TestFile1.ans into buffer
-  char buffer[1024];
-  FILE* file = fopen(SAUCE_TESTFILE1_PATH, "rb");
-  if (file == NULL) {
-    TEST_FAIL_MESSAGE("Could not open "SAUCE_TESTFILE1_PATH);
+  int length = copy_file_into_buffer(SAUCE_TESTFILE1_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy TestFile1.ans into the buffer");
     return;
   }
 
-  int read;
-  uint32_t total = 0;
-  while (1) {
-    read = fread(buffer + total, 1, 256, file);
-    if (read <= 0) {
-      break;
-    }
-    total += read;
-  }
-  fclose(file);
-
   // replace buffer's sauce
-  int res = SAUCE_write(buffer, total, &sauce);
-  TEST_ASSERT_EQUAL(total, res);
+  int res = SAUCE_write(buffer, length, &sauce);
+  TEST_ASSERT_EQUAL(length, res);
 
-  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, total, SAUCE_REPLACE_PATH));
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_REPLACE_PATH));
 }
 
 
