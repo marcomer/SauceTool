@@ -30,6 +30,7 @@ void set_sauce(SAUCE* sauce) {
 
 
 static SAUCE sauce;
+static char buffer[1024];
 
 void setUp() {
   set_sauce(&sauce);
@@ -41,6 +42,9 @@ void setUp() {
     exit(1);
   }
   fclose(write_actual);
+
+  // clear the global buffer
+  memset(buffer, 0, 1024);
 }
 
 void tearDown() {
@@ -87,6 +91,42 @@ void should_ReplaceSAUCE_when_FileContainsSAUCE() {
 
   TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_REPLACE_PATH));
 }
+
+
+void should_ReplaceSAUCE_when_FileOnlyContainsSAUCE() {
+  // copy TestFile2.ans to actual
+  if (copy_file(SAUCE_TESTFILE2_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy TestFile2.ans to write_actual.txt");
+    return;
+  }
+
+  // replace actual's SAUCE
+  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
+  TEST_ASSERT_EQUAL(0, res);
+
+  // WriteToEmpty is equivalent to replacing a file that only contains SAUCE
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_WRITETOEMPTY_PATH));
+}
+
+
+void should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsSAUCEWithNoEOF() {
+  // copy SauceButNoEOF.ans to actual
+  if (copy_file(SAUCE_SAUCEBUTNOEOF_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans to write_actual.txt");
+    return;
+  }
+
+  // replace actual's SAUCE and add EOF
+  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
+  TEST_ASSERT_EQUAL(0, res);
+
+  // WriteToEmpty is equivalent to replacing a file that only contains SAUCE
+  // An EOF character should be added as well
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_WRITETOEMPTY_PATH));
+}
+
+
+
 
 
 
@@ -161,6 +201,41 @@ void should_ReplaceSAUCE_when_BufferContainsSAUCE() {
 }
 
 
+void should_ReplaceSAUCE_when_BufferOnlyContainsSAUCE() {
+  // copy TestFile2.ans to that buffer
+  int length = copy_file_into_buffer(SAUCE_TESTFILE2_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy TestFile2.ans into the buffer");
+    return;
+  }
+
+  // replace buffer's SAUCE
+  int res = SAUCE_write(buffer, length, &sauce);
+  TEST_ASSERT_EQUAL(length, res);
+
+  // WriteToEmpty is equivalent to replacing a file that only contains SAUCE
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_WRITETOEMPTY_PATH));
+}
+
+
+void should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsSAUCEWithNoEOF() {
+  // copy SauceButNoEOF.ans to the buffer
+  int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy SauceButNoEOF.ans into the buffer");
+    return;
+  }
+
+  // replace buffer's SAUCE and add EOF
+  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
+  TEST_ASSERT_EQUAL(length + 1, res);
+
+  // WriteToEmpty is equivalent to replacing a file that only contains SAUCE
+  // An EOF character should be added as well
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_WRITETOEMPTY_PATH));
+}
+
+
 
 
 // File fail cases
@@ -194,9 +269,13 @@ int main(int argc, char** argv) {
   RUN_TEST(should_WriteToFile_when_FileIsEmpty);
   RUN_TEST(should_AppendToFile_when_FileContainsContent);
   RUN_TEST(should_ReplaceSAUCE_when_FileContainsSAUCE);
+  RUN_TEST(should_ReplaceSAUCE_when_FileOnlyContainsSAUCE);
+  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsSAUCEWithNoEOF);
   RUN_TEST(should_WriteToBuffer_when_BufferLengthIsZero);
   RUN_TEST(should_AppendToBuffer_when_BufferContainsContent);
   RUN_TEST(should_ReplaceSAUCE_when_BufferContainsSAUCE);
+  RUN_TEST(should_ReplaceSAUCE_when_BufferOnlyContainsSAUCE);
+  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsSAUCEWithNoEOF);
   RUN_TEST(should_FailToWrite_when_FileDoesNotExist);
   RUN_TEST(should_FailToWrite_when_FilePathIsNull);
   RUN_TEST(should_FailToWrite_when_BufferIsNull);

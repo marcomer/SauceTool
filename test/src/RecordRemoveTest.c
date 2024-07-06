@@ -19,6 +19,9 @@ void setUp() {
     exit(1);
   }
   fclose(remove_actual);
+
+  // clear the global buffer
+  memset(buffer, 0, 1024);
 }
 
 void tearDown() {}
@@ -74,6 +77,33 @@ void should_RemoveFromFile_when_FileOnlyContainsRecord() {
     return;
   }
 
+  // assert that the file is empty
+  char buffer[1];
+  int read = fread(buffer, 1, 1, actual);
+  fclose(actual);
+  TEST_ASSERT_EQUAL(0, read);
+}
+
+
+void should_RemoveFromFile_when_FileOnlyContainsRecordWithNoEOF() {
+  // copy SauceButNoEOF.ans to remove_actual
+  if (copy_file(SAUCE_SAUCEBUTNOEOF_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans to remove_actual");
+    return;
+  }
+
+  int res = SAUCE_fremove(SAUCE_REMOVE_ACTUAL_PATH);
+  TEST_ASSERT_EQUAL(0, res);
+
+
+    // attempt to read remove_actual
+  FILE* actual = fopen(SAUCE_REMOVE_ACTUAL_PATH, "rb");
+  if (actual == NULL) {
+    TEST_FAIL_MESSAGE("Could not open remove_actual.txt");
+    return;
+  }
+
+  // assert that the file is empty
   char buffer[1];
   int read = fread(buffer, 1, 1, actual);
   fclose(actual);
@@ -124,9 +154,21 @@ void should_RemoveFromBuffer_when_BufferOnlyContainsRecord() {
   }
 
   int res = SAUCE_remove(buffer, length);
-  TEST_ASSERT_EQUAL(0, res);
+  TEST_ASSERT_EQUAL(0, res); // assert that the buffer is empty
 }
 
+
+void should_RemoveFromBuffer_when_BufferOnlyContainsRecordWithNoEOF() {
+  // copy SauceButNoEOF.ans into a buffer
+  int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy TestFile2.ans into a buffer");
+    return;
+  }
+
+  int res = SAUCE_remove(buffer, length);
+  TEST_ASSERT_EQUAL(0, res); // assert that the buffer is empty
+}
 
 
 
@@ -172,18 +214,6 @@ void should_FailToRemoveFromFile_when_FilePathIsNULL() {
 }
 
 
-void should_FailToRemoveFromFile_when_FileHasNoEOFCharacter() {
-  if (copy_file(SAUCE_SAUCEBUTNOEOF_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
-    TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans to remove_actual.txt");
-    return;
-  }
-
-  int res = SAUCE_fremove(SAUCE_REMOVE_ACTUAL_PATH);
-  TEST_ASSERT_EQUAL(SAUCE_ERMISS, res);
-
-  // asser that remove_actual did not change
-  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_REMOVE_ACTUAL_PATH, SAUCE_SAUCEBUTNOEOF_PATH));
-}
 
 
 
@@ -226,20 +256,6 @@ void should_FailToRemoveFromBuf_when_BufferIsNULL() {
 }
 
 
-void should_FailToRemoveFromBuf_when_BufferHasNoEOFCharacter() {  
-  int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
-  if (length <= 0) {
-    TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans into a buffer");
-    return;
-  }
-
-  int res = SAUCE_remove(buffer, length);
-  TEST_ASSERT_EQUAL(SAUCE_ERMISS, res);
-
-  // assert that the buffer's contents have not been changed
-  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_SAUCEBUTNOEOF_PATH));
-}
-
 
 
 
@@ -251,18 +267,18 @@ int main(int argc, char** argv) {
   RUN_TEST(should_RemoveFromFile_when_FileContainsRecord);
   RUN_TEST(should_RemoveFromFile_when_FileContainsCommentAndRecord);
   RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecord);
+  RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsRecord);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsCommentAndRecord);
   RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecord);
+  RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_FailToRemoveFromFile_when_FileDoesNotExist);
   RUN_TEST(should_FailToRemoveFromFile_when_SAUCEIsMissing);
   RUN_TEST(should_FailToRemoveFromFile_when_FileIsTooShort);
   RUN_TEST(should_FailToRemoveFromFile_when_FilePathIsNULL);
-  RUN_TEST(should_FailToRemoveFromFile_when_FileHasNoEOFCharacter);
   RUN_TEST(should_FailToRemoveFromBuf_when_SAUCEIsMissing);
   RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsTooShort);
   RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsNULL);
-  RUN_TEST(should_FailToRemoveFromBuf_when_BufferHasNoEOFCharacter);
 
   return UNITY_END();
 }
