@@ -143,7 +143,7 @@ The field descriptions are:
 ## Reading
 Functions are provided to find and read SAUCE records and CommentBlocks from files/buffers.
 
-Note that because CommentBlocks are *optional*, you must read the SAUCE record first in order to determine if a CommentBlock exists, and if so, how many comment lines can be read.
+**NOTE**: It is recommended that you first read the SAUCE record to determine how many comment lines exist *before* you attempt to read the comment. However, if you only care for the full comment, attempting to read 255 lines of the comment is guaranteed to give you all available lines.
 
 
 ### Functions
@@ -152,7 +152,7 @@ Note that because CommentBlocks are *optional*, you must read the SAUCE record f
 
 
 #### `SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines)`
-- From a file, read `nLines` lines of a SAUCE CommentBlock into `block`.
+- From a file, read at most `nLines` of a SAUCE CommentBlock into `block`. If the file does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
 
 
 #### `SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce)`
@@ -160,23 +160,25 @@ Note that because CommentBlocks are *optional*, you must read the SAUCE record f
 
 
 #### `SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines)`
-- From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`.
+- From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`. If the buffer does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
 
 
 ### Return Values
-On success, all read function will return 0. On an error, all read functions will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
+On success, `SAUCE_fread()` and `SAUCE_read()` will return 0. On an error, all SAUCE record read functions will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
 
-*Each* read function will return an error if the file or buffer are missing a SAUCE record. `SAUCE_fread()` and `SAUCE_read()` ignore SAUCE CommentBlocks and will therefore *not* return an error if a CommentBlock is missing. `SAUCE_Comment_fread()` and `SAUCE_Comment_read()` will return an error if the comment block is missing.
+On success, `SAUCE_Comment_fread()` and `SAUCE_Comment_read()` will return the number of lines read. On an error, they will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
+
+**NOTE**: *Each* read function will return an error if the file or buffer are missing a SAUCE record. `SAUCE_fread()` and `SAUCE_read()` ignore SAUCE CommentBlocks and will therefore *not* return an error if a CommentBlock is missing, meaning the record's "Comments" field was incorrect.
 
 
 
 
 ## Writing
-The write functions can be used to **write** new SAUCE records/CommentBlocks or **replace** existing records/CommentBlocks. Replacing records/CommentBlocks can be more involved than simply appending a new record, so see the Details section for more info on replacing existing records/CommentBlocks.
+The write functions can be used to **write** new SAUCE records/CommentBlocks or **replace** existing records/CommentBlocks.
 
-Note that if a write function returns an error, the file/buffer will not be altered.
+**NOTE**: if a write function returns an error, the file/buffer will not be altered.
 
-When writing a SAUCE record, the original "Comments" field will always remain unchanged. The "Comments" field is only updated when a CommentBlock is successfully written or removed. If there is no existing SAUCE record, then the "Comments" field will always be set to 0. 
+**NOTE**: When writing a SAUCE record, the original "Comments" field will always remain unchanged. The "Comments" field is only updated when a CommentBlock is successfully written or removed. If there is no existing SAUCE record, then the "Comments" field will always be set to 0. 
 
 ### Functions
 #### `SAUCE_fwrite(const char* filepath, const SAUCE* sauce)`
@@ -213,7 +215,7 @@ On success, all **buffer** write functions will return the new length of the buf
 ## Removing
 Functions are provided to remove SAUCE records and CommentBlocks from files/buffers.
 
-Note that if a function fails to remove a SAUCE record/comment, the file/buffer will not be altered.
+**NOTE**: if a function fails to remove a SAUCE record/comment, the file/buffer will not be altered.
 
 
 ### Functions
