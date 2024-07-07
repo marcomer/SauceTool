@@ -57,7 +57,7 @@ SAUCE* test_get_testfile1_expected_record() {
 SAUCE_CommentBlock* test_get_testfile1_expected_comment() {
   static SAUCE_CommentBlock block;
   static char string[128];
-  memset(string, 0, 128);
+  memset(string, ' ', 128);
   memcpy(block.ID, "COMNT", 5);
   block.lines = 2;
   
