@@ -282,12 +282,3 @@ int main(int argc, char** argv) {
 
   return UNITY_END();
 }
-
-
-
-
-
-// TODO: for all other tests
-// write -> if error, make sure the file did not change
-// test for the situation where there is no EOF character but 128 bytes of a sauce record
-// check if the filepath is NULL
