@@ -17,7 +17,7 @@
 // No Sauce File -> File does not contain any SAUCE info
 #define SAUCE_NOSAUCE_PATH      "expect/NoSauce.txt"
 
-// ShortFile -> File under 128 bytes FIXME: change limit to 129 bytes to include EOF?
+// ShortFile -> File under 128 bytes
 #define SAUCE_SHORTFILE_PATH    "expect/ShortFile.txt"
 
 // SauceButNoEOF -> TestFile1 with a missing EOF character
