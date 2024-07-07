@@ -43,7 +43,7 @@
 #define SAUCE_APPEND_PATH         "expect/write/AppendExpect.txt"
 
 // File to contain the actual results of a test write
-#define SAUCE_WRITE_ACTUAL_PATH   "expect/actual/write_actual.txt"
+#define SAUCE_WRITE_ACTUAL_PATH   "actual/write_actual.txt"
 
 
 
@@ -56,7 +56,7 @@
 #define SAUCE_REMOVE_RECORD_AND_COMMENT_PATH  "expect/remove/RemoveBoth.txt"
 
 // File to contain the actual results of a test remove
-#define SAUCE_REMOVE_ACTUAL_PATH  "expect/actual/remove_actual.txt"
+#define SAUCE_REMOVE_ACTUAL_PATH  "actual/remove_actual.txt"
 
 
 
