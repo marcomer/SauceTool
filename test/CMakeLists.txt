@@ -60,6 +60,21 @@ add_test(
 )
 
 
+# Initialize CommentReadTest suite
+add_executable(CommentReadTest
+  src/CommentReadTest.c
+  src/TestRes.c
+)
+target_link_libraries(CommentReadTest
+  Sauce
+  Unity
+)
+add_test(
+  NAME CommentReadTest
+  COMMAND CommentReadTest
+)
+
+
 
 # Add a custom target that copies the expect/ directory to the test binary directory
 add_custom_target(copy_expect ALL
