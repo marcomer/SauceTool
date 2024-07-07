@@ -168,7 +168,7 @@ On success, `SAUCE_fread()` and `SAUCE_read()` will return 0. On an error, all S
 
 On success, `SAUCE_Comment_fread()` and `SAUCE_Comment_read()` will return the number of lines read. On an error, they will return a negative error code. You can use `SAUCE_get_error()` to get more info about the error.
 
-**NOTE**: *Each* read function will return an error if the file or buffer are missing a SAUCE record. `SAUCE_fread()` and `SAUCE_read()` ignore SAUCE CommentBlocks and will therefore *not* return an error if a CommentBlock is missing, meaning the record's "Comments" field was incorrect.
+**NOTE**: *Each* read function will return an error if the file or buffer are missing a SAUCE record. `SAUCE_fread()` and `SAUCE_read()` ignore SAUCE CommentBlocks and will therefore *not* return an error if a CommentBlock is invalid, meaning the record's "Comments" field was incorrect and the COMNT id could not be found.
 
 
 
