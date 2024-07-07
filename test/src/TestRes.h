@@ -23,6 +23,13 @@
 // SauceButNoEOF -> TestFile1 with a missing EOF character
 #define SAUCE_SAUCEBUTNOEOF_PATH  "expect/SauceButNoEOF.ans"
 
+// CommentButNoRecord -> TestFile1 without a SAUCE record
+#define SAUCE_COMMENTBUTNORECORD_PATH   "expect/CommentButNoRecord.ans"
+
+// InvalidComment -> Long file with an incorrect Comments field
+#define SAUCE_INVALIDCOMMENT_PATH       "expect/InvalidComment.txt"
+
+
 
 // Expected write file results. These files should not be changed
 
