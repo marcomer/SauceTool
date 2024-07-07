@@ -15,8 +15,12 @@ static uint32_t testfile1_length;
 static char testfile2_buffer[1024];
 static uint32_t testfile2_length;
 
+static char buffer[1024];
+
 void setUp() {
   SAUCE_set_default(&actual);
+
+  memset(buffer, 0, 1024);
 }
 
 
@@ -50,12 +54,33 @@ void should_ReadFromFile_when_FileOnlyContainsSAUCE() {
 }
 
 
-void should_ReadFromBuffer_when_BufferSizeIs128AndContainsSAUCE() {
-  TEST_ASSERT_EQUAL_INT(128, testfile2_length);
+void should_ReadFromFile_when_FileContainsSAUCEButNoEOF() {
+  int res = SAUCE_fread(SAUCE_SAUCEBUTNOEOF_PATH, &actual);
+  TEST_ASSERT_EQUAL(0, res);
+
+  TEST_ASSERT_TRUE(SAUCE_equal(test_get_testfile1_expected_record(), &actual));
+}
+
+
+void should_ReadFromBuffer_when_BufferOnlyContainsSAUCE() {
   int res = SAUCE_read(testfile2_buffer, testfile2_length, &actual);
-  TEST_ASSERT_EQUAL_INT(0, res);
+  TEST_ASSERT_EQUAL(0, res);
 
   TEST_ASSERT_TRUE(SAUCE_equal(test_get_testfile2_expected_record(), &actual));
+}
+
+
+void should_ReadFromBuffer_when_BufferContainsSAUCEButNoEOF() {
+  int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy SauceButNoEOF.ans to the buffer");
+    return;
+  }
+
+  int res = SAUCE_read(buffer, length, &actual);
+  TEST_ASSERT_EQUAL(0, res);
+
+  TEST_ASSERT_TRUE(SAUCE_equal(test_get_testfile1_expected_record(), &actual));
 }
 
 
@@ -170,7 +195,9 @@ int main(int argc, char** argv) {
   RUN_TEST(should_ReadFromFile_when_FileContainsSAUCE);
   RUN_TEST(should_ReadFromBuffer_when_BufferContainsSAUCE);
   RUN_TEST(should_ReadFromFile_when_FileOnlyContainsSAUCE);
-  RUN_TEST(should_ReadFromBuffer_when_BufferSizeIs128AndContainsSAUCE);
+  RUN_TEST(should_ReadFromFile_when_FileContainsSAUCEButNoEOF);
+  RUN_TEST(should_ReadFromBuffer_when_BufferOnlyContainsSAUCE);
+  RUN_TEST(should_ReadFromBuffer_when_BufferContainsSAUCEButNoEOF);
   RUN_TEST(should_FailOnReadFile_when_FileDoesNotExist);
   RUN_TEST(should_FailOnReadFile_when_SAUCEIsMissing);
   RUN_TEST(should_FailOnReadFile_when_SAUCEPointerIsNull);
