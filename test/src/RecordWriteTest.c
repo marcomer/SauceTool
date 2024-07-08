@@ -223,11 +223,23 @@ void should_FailToWrite_when_FilePathIsNull() {
 }
 
 
+void should_FailToWrite_when_FileSauceIsNull() {
+  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, NULL);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
 
 
 // Buffer fail cases
 void should_FailToWrite_when_BufferIsNull() {
   int res = SAUCE_write(NULL, 256, &sauce);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
+void should_FailToWrite_when_BufferSauceIsNull() {
+  int res = SAUCE_write(buffer, 0, NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
 }
 
@@ -250,7 +262,9 @@ int main(int argc, char** argv) {
   RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsSAUCEWithNoEOF);
   RUN_TEST(should_FailToWrite_when_FileDoesNotExist);
   RUN_TEST(should_FailToWrite_when_FilePathIsNull);
+  RUN_TEST(should_FailToWrite_when_FileSauceIsNull);
   RUN_TEST(should_FailToWrite_when_BufferIsNull);
+  RUN_TEST(should_FailToWrite_when_BufferSauceIsNull);
 
   return UNITY_END();
 }
