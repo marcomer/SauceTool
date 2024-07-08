@@ -224,8 +224,16 @@ void should_FailToWrite_when_FilePathIsNull() {
 
 
 void should_FailToWrite_when_FileSauceIsNull() {
+  if (copy_file(SAUCE_TESTFILE1_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Failed to write TestFile1.ans to write_actual.txt");
+    return;
+  }
+
   int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+
+  // assert that write_actual has not changed
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_TESTFILE1_PATH));
 }
 
 
@@ -239,8 +247,17 @@ void should_FailToWrite_when_BufferIsNull() {
 
 
 void should_FailToWrite_when_BufferSauceIsNull() {
-  int res = SAUCE_write(buffer, 0, NULL);
+  int length = copy_file_into_buffer(SAUCE_TESTFILE1_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy TestFile1.ans into the buffer");
+    return;
+  }
+
+  int res = SAUCE_write(buffer, length, NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+
+  // assert that the buffer has not changed
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_TESTFILE1_PATH));
 }
 
 
