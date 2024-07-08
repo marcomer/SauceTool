@@ -158,6 +158,12 @@ void should_FailToRead_when_FilePathIsNull() {
 }
 
 
+void should_FailToReadFromFile_when_CommentStringIsNull() {
+  block.comment = NULL;
+  int res = SAUCE_Comment_fread(SAUCE_TESTFILE1_PATH, &block, 2);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
 
 
 
@@ -226,6 +232,13 @@ void should_FailToRead_when_BufferLengthIsTooShort() {
 }
 
 
+void should_FailToReadFromBuffer_when_CommentStringIsNull() {
+  block.comment = NULL;
+  int res = SAUCE_Comment_read(buffer, 256, &block, 2);
+  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
 
 
 
@@ -245,12 +258,14 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToReadFromFile_when_CommentIsInvalid);
   RUN_TEST(should_FailToRead_when_FileSaucePointerIsNull);
   RUN_TEST(should_FailToRead_when_FilePathIsNull);
+  RUN_TEST(should_FailToReadFromFile_when_CommentStringIsNull);
   RUN_TEST(should_FailToRead_when_BufferHasCommentButNoRecord);
   RUN_TEST(should_FailToRead_when_BufferHasNoSAUCE);
   RUN_TEST(should_FailToReadFromBuffer_when_CommentIsInvalid);
   RUN_TEST(should_FailToRead_when_BufferSaucePointerIsNull);
   RUN_TEST(should_FailToRead_when_BufferIsNull);
   RUN_TEST(should_FailToRead_when_BufferLengthIsTooShort);
+  RUN_TEST(should_FailToReadFromBuffer_when_CommentStringIsNull);
 
   return UNITY_END();
 }
