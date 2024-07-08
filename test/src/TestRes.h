@@ -29,6 +29,9 @@
 // InvalidComment -> Long file with an incorrect Comments field
 #define SAUCE_INVALIDCOMMENT_PATH       "expect/InvalidComment.txt"
 
+// LongNoSauce -> A CMakeLists.txt file with no SAUCE info
+#define SAUCE_LONGNOSAUCE_PATH          "expect/LongNoSauce.txt"
+
 
 
 // Expected write file results. These files should not be changed
