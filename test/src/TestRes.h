@@ -49,7 +49,6 @@
 #define SAUCE_WRITE_ACTUAL_PATH   "actual/write_actual.txt"
 
 
-
 // Expected remove file results. These files should not be changed
 
 // Result of removing a SAUCE record from TestFile3.ans
@@ -61,6 +60,18 @@
 // File to contain the actual results of a test remove
 #define SAUCE_REMOVE_ACTUAL_PATH  "actual/remove_actual.txt"
 
+
+// Expected comment write file results. These files should not be changed.
+
+// File to contain the acutal results of a test comment write
+#define SAUCE_COMMENT_WRITE_ACTUAL_PATH     "actual/comment_write_actual.txt"
+
+
+
+// Expected comment remove file results. These files should not be changed
+
+// File to contain the actual result of a test comment remove
+#define SAUCE_COMMENT_REMOVE_ACTUAL_PATH    "actual/comment_remove_actual.txt"
 
 
 // The expected result of SAUCE_set_default
