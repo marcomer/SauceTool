@@ -82,3 +82,10 @@ add_custom_target(copy_expect ALL
     ${CMAKE_SOURCE_DIR}/test/expect ${CMAKE_CURRENT_BINARY_DIR}/expect
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+# Add a custom target that copies the actual/ directory to the test binary directory
+add_custom_target(copy_actual ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+    ${CMAKE_SOURCE_DIR}/test/actual ${CMAKE_CURRENT_BINARY_DIR}/actual
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
