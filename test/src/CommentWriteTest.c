@@ -16,15 +16,13 @@ static char buffer[2048];
 
 void setUp() {
   // create the short comment
-  static char shortString[SAUCE_COMMENT_LINE_LENGTH + 1];
-  memset(shortString, ' ', SAUCE_COMMENT_LINE_LENGTH);
-  shortString[SAUCE_COMMENT_LINE_LENGTH] = '\0';
+  static char shortString[SAUCE_COMMENT_LINE_LENGTH];
+  memset(shortString, 0, SAUCE_COMMENT_LINE_LENGTH);
   memcpy(shortString, SHORT_COMMENT_MSG, sizeof(SHORT_COMMENT_MSG) - 1);
 
   // create the long comment
-  static char longString[SAUCE_COMMENT_LINE_LENGTH * 25 + 1];
-  memset(longString, ' ', SAUCE_COMMENT_LINE_LENGTH * 25);
-  longString[SAUCE_COMMENT_LINE_LENGTH * 25] = '\0';
+  static char longString[SAUCE_COMMENT_LINE_LENGTH * 25];
+  memset(longString, 0, SAUCE_COMMENT_LINE_LENGTH * 25);
   int len = copy_file_into_buffer(SAUCE_LONGNOSAUCE_PATH, longString);
   if (len <= 0) {
     fprintf(stderr, "Failed to write %s to longString buffer", SAUCE_LONGNOSAUCE_PATH);
