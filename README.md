@@ -190,6 +190,7 @@ The write functions can be used to **write** new SAUCE records/CommentBlocks or 
 - Write a SAUCE CommentBlock to a file, replacing a CommentBlock if one already exists.
 - `comment` must be null-terminated.
 - The "Comments" field of the file's SAUCE record will be updated to the new number of comment lines.
+- **NOTE**: The null character is not included in the written SAUCE record. The comment's last line will be padded with spaces if the comment can't fill the entire line.
 
 #### `SAUCE_write(const char* buffer, uint32_t n, const SAUCE* sauce)`
 - Write a SAUCE record to a buffer.
@@ -202,6 +203,7 @@ The write functions can be used to **write** new SAUCE records/CommentBlocks or 
 - If the last 128 bytes of the buffer (bytes `n-1` to `n-128`) contain a SAUCE record, the CommentBlock will be written. Otherwise, an error will be returned.
 - The "Comments" field of the buffer's SAUCE record will be updated to the new number of comment lines.
 - **Important**: To prevent a buffer overflow error when writing a new comment, the buffer's actual size must be at least `n` + `SAUCE_COMMENT_BLOCK_SIZE(number of comment lines)`.
+- **NOTE**: The null character is not included in the written SAUCE record. The comment's last line will be padded with spaces if the comment can't fill the entire line.
 
 
 ### Return Values
