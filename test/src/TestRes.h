@@ -32,6 +32,8 @@
 // LongNoSauce -> A CMakeLists.txt file with no SAUCE info
 #define SAUCE_LONGNOSAUCE_PATH          "expect/LongNoSauce.txt"
 
+// OnlyRecord -> Record from TestFile2.ans but with no EOF character
+#define SAUCE_ONLYRECORD_PATH           "expect/OnlyRecord.ans"
 
 
 // Expected write file results. These files should not be changed
@@ -65,6 +67,18 @@
 
 // File to contain the acutal results of a test comment write
 #define SAUCE_COMMENT_WRITE_ACTUAL_PATH     "actual/comment_write_actual.txt"
+
+// AddCommentToRecord -> Contains the result of adding shortComment to TestFile2.ans
+#define SAUCE_ADDCOMMENTTORECORD_PATH       "expect/comment_write/AddCommentToRecord.txt"
+
+// ReplaceExistingComment -> Contains the result of replacing TestFile1's comment with longComment
+#define SAUCE_REPLACEEXISTINGCOMMENT_PATH   "expect/comment_write/ReplaceExistingComment.txt"
+
+// AddCommentAndEOFToRecord -> Contains the result of adding shortComment and an EOF to OnlyRecord.ans
+#define SAUCE_ADDCOMMENTANDEOFTORECORD_PATH   "expect/comment_write/AddCommentAndEOFToRecord.txt"
+
+// ReplaceCommentAndAddEOF -> Contains the result of replacing SauceButNoEOF's comment with shortComment and adding EOF
+#define SAUCE_REPLACECOMMENTANDADDEOF_PATH    "expect/comment_write/ReplaceCommentAndAddEOF.txt"
 
 
 
