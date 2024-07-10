@@ -16,7 +16,8 @@
     - [Writing](#writing)
     - [Removing](#removing)
     - [Performing Checks](#performing-checks)
-    - [Constants and Helper Functions](#constants-and-helper-functions)
+    - [Constants](#constants)
+    - [Helper Functions](#helper-functions)
     - [Error Codes](#error-codes)
 
 
@@ -276,15 +277,13 @@ The `SAUCE_equal()` and `SAUCE_Comment_equal()` will return a boolean value: 1 f
 
 
 
-## Constants and Helper Functions
-### `SAUCE_COMMENT_LINE_LENGTH` constant
+
+## Constants
+### `SAUCE_COMMENT_LINE_LENGTH`
 Length of a single Comment Line in bytes
 
-### `SAUCE_RECORD_SIZE` constant
+### `SAUCE_RECORD_SIZE`
 The size of a SAUCE record in bytes
-
-### `SAUCE_COMMENT_BLOCK_SIZE(lines)` macro function
-Function that determines how large a CommentBlock will be in bytes according to the number of lines present.
 
 ### `SAUCE_DataType` enum 
 An enum to help with identifying DataTypes. All DataType constants start with `SAUCE_DT_` and are named according to the DataTypes listed in the [specs](https://www.acid.org/info/sauce/sauce.htm).
@@ -292,6 +291,10 @@ An enum to help with identifying DataTypes. All DataType constants start with `S
 ### `SAUCE_FileType` enum
 An enum to help with identifying FileTypes. All FileType constants start with `SAUCE_FT_` and are named according to the FileTypes listed in the [specs FileType table](https://www.acid.org/info/sauce/sauce.htm#FileType).
 
+
+
+
+## Helper Functions
 ### `SAUCE_get_error()`
 Get an error message about the last SAUCE error that occurred. An empty
 string will be returned if no SAUCE error has yet to occur.
@@ -303,6 +306,9 @@ is typically 0 or spaces.
 
 ### `SAUCE_num_comment_lines(const char* string)`
 Determine how many comment lines a string will need in order to place it in a CommentBlock.
+
+### `SAUCE_COMMENT_BLOCK_SIZE(lines)`
+Macro function that determines how large an actual CommentBlock will be in bytes according to the number of lines present. This includes the 5 bytes for the COMNT id.
 
 
 
