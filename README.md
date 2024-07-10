@@ -58,7 +58,7 @@ Although EOF characters are important for text/file viewers, this library specif
 
 When **writing** a SAUCE record or comment, an EOF character will be added if an EOF character does not already exist.
 
-When **removing** a SAUCE record, if an EOF character exists immediately before the SAUCE data, then the EOF character will be removed. If you are only removing a comment, the EOF will not be removed but will instead be repositioned. If you are only removing a comment *and* there is no EOF character, then an EOF character will be added.
+When **removing** a SAUCE record, if an EOF character exists immediately before the SAUCE data, then the EOF character will be removed. If you are only removing a comment, the EOF will *not* be removed. If you are only removing a comment *and* there is no EOF character, then an EOF character will be added.
 
 
 
