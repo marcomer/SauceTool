@@ -105,6 +105,21 @@ add_test(
 )
 
 
+# Initialize CheckTest suite
+add_executable(CheckTest
+  src/CheckTest.c
+  src/TestRes.c
+)
+target_link_libraries(CheckTest
+  Sauce
+  Unity
+)
+add_test(
+  NAME CheckTest
+  COMMAND CheckTest
+)
+
+
 
 # Add a custom target that copies the expect/ directory to the test binary directory
 add_custom_target(copy_expect ALL
