@@ -54,11 +54,11 @@ See the Usage section in the [Table of Contents](#table-of-contents) for info on
 ## The EOF Character
 SAUCE specifies that an EOF character (Decimal 26, Hex 1A, Ctrl+Z) should be placed immediately before the SAUCE data as a way to prevent a text/file viewer from reading the SAUCE data as text.
 
-Although EOF characters are important for text/file viewers, this library specifies that an EOF char is *not* required to **read** or **perform checks** on any SAUCE information. Refer to the [requirements](#sauce-record-requirements) section below for what is required for reading and performing checks.
+Although EOF characters are important for text/file viewers, this library specifies that an EOF char is *not* required to **read** or **perform checks** on any SAUCE information. Refer to the [requirements](#sauce-record-requirements) section below for what is checked for when reading and performing checks.
 
 When **writing** a SAUCE record or comment, an EOF character will be added if an EOF character does not already exist.
 
-When **removing** a SAUCE record, if an EOF character exists immediately before the SAUCE data, then the EOF character will be removed. If you are only removing a comment, the EOF will not be removed but will instead be repositioned.
+When **removing** a SAUCE record, if an EOF character exists immediately before the SAUCE data, then the EOF character will be removed. If you are only removing a comment, the EOF will not be removed but will instead be repositioned. If you are only removing a comment *and* there is no EOF character, then an EOF character will be added.
 
 
 
