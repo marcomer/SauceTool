@@ -90,6 +90,21 @@ add_test(
 )
 
 
+# Initialize CommentRemoveTest suite
+add_executable(CommentRemoveTest
+  src/CommentRemoveTest.c
+  src/TestRes.c
+)
+target_link_libraries(CommentRemoveTest
+  Sauce
+  Unity
+)
+add_test(
+  NAME CommentRemoveTest
+  COMMAND CommentRemoveTest
+)
+
+
 
 # Add a custom target that copies the expect/ directory to the test binary directory
 add_custom_target(copy_expect ALL

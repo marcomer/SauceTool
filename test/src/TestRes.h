@@ -87,6 +87,12 @@
 // File to contain the actual result of a test comment remove
 #define SAUCE_COMMENT_REMOVE_ACTUAL_PATH    "actual/comment_remove_actual.txt"
 
+// RemoveComment -> Contains the result of removing a comment from TestFile1.ans
+#define SAUCE_REMOVECOMMENT_PATH            "expect/comment_remove/RemoveComment.ans"
+
+// RemoveCommentAndAddEOF -> Contains the result of removing a comment from SauceButNoEOF.ans
+#define SAUCE_REMOVECOMMENTANDADDEOF_PATH   "expect/comment_remove/RemoveCommentAndAddEOF.ans"
+
 
 // The expected result of SAUCE_set_default
 extern const SAUCE default_record;
