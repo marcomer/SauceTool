@@ -247,7 +247,9 @@ On success, all **buffer** remove functions will return the new length of the bu
 
 
 ## Performing Checks
-Functions are provided to check if a file/buffer contains correct SAUCE data that adheres to the TODO: put link to requirements here? SAUCE specification. SAUCE data is considered correct if the end of a file/buffer contains an EOF character, an *optional* CommentBlock, and a SAUCE record. Since the CommentBlock is optional, the CommentBlock will only be checked for correctness if the corresponding SAUCE record's "Comments" field is greater than 0.
+`SAUCE_check_file()` and `SAUCE_check_buffer()` are provided to check the correctness of SAUCE data in a file/buffer. SAUCE data is deemed correct if it exists and adheres to the SAUCE record and CommentBlock [requirements](#sauce-record-requirements).
+
+`SAUCE_equal()` and `SAUCE_Comment_equal()` are provided to check if two SAUCE structs or two SAUCE CommentBlocks are equal.
 
 ### Functions
 #### `SAUCE_check_file(const char* filepath)`
@@ -267,11 +269,14 @@ Functions are provided to check if a file/buffer contains correct SAUCE data tha
 - SAUCE_CommentBlocks are equal if the content of each field match between the CommentBlocks.
 
 ### Return Values
-The functions above will return a boolean value (1 for true, 0 for false). For `SAUCE_check_file()` and `SAUCE_check_buffer()`, if 0 is returned, you can call `SAUCE_get_error()` to learn more about why the check failed.
+
+On success, `SAUCE_check_file()` and `SAUCE_check_buffer()` will return 1 (i.e. true) if the file/buffer contained correct SAUCE data. On error, meaning that no SAUCE data existed or the SAUCE data was incorrect, the check functions will return 0 (i.e. false). If 0 is returned, you can call `SAUCE_get_error()` to learn more about why the check failed.
+
+The `SAUCE_equal()` and `SAUCE_Comment_equal()` will return a boolean value: 1 for true, and 0 for false.
 
 
 
-## Constants, and Helper Functions
+## Constants and Helper Functions
 ### `SAUCE_COMMENT_LINE_LENGTH` constant
 Length of a single Comment Line in bytes
 
