@@ -128,9 +128,11 @@ add_custom_target(copy_expect ALL
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-# Add a custom target that copies the actual/ directory to the test binary directory
-add_custom_target(copy_actual ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${CMAKE_SOURCE_DIR}/test/actual ${CMAKE_CURRENT_BINARY_DIR}/actual
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+# Create the actual/ directory in the test binary directory
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/actual)
+
+# Create all the "actual" files written to by the test suites
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/comment_remove_actual.txt)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/comment_write_actual.txt)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/remove_actual.txt)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/write_actual.txt)
