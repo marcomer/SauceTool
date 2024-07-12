@@ -2,7 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <assert.h>
 #include "Sauce.h"
+
+// Static asserts
+static_assert(sizeof(SAUCE) == SAUCE_RECORD_SIZE, "size of SAUCE struct should be exactly 128 bytes");
+
 
 // The SAUCE error message
 static char* error_msg = NULL;
@@ -160,7 +165,33 @@ int SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t
  *         to get more info on the error.
  */
 int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
-  return -1;
+  // null checks
+  if (buffer == NULL) {
+    SAUCE_set_error("Buffer was NULL");
+    return SAUCE_ENULL;
+  }
+  if (sauce == NULL) {
+    SAUCE_set_error("SAUCE struct was NULL");
+    return SAUCE_ENULL;
+  }
+
+  // check if n is too short
+  if (n < SAUCE_RECORD_SIZE) {
+    SAUCE_set_error("The buffer length of %u is too short to contain a record", n);
+    return SAUCE_ESHORT;
+  }
+
+
+  // find the SAUCE id
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) {
+    SAUCE_set_error("Could not find the SAUCE id in the buffer");
+    return SAUCE_ERMISS;
+  }
+
+  // copy the record
+  memcpy(sauce, &buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
+
+  return 0;
 }
 
 
