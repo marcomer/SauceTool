@@ -41,7 +41,7 @@ void SAUCE_set_default(SAUCE* sauce) {
  * @param string a null-terminated string
  * @return how many lines the string will need
  */
-int SAUCE_num_comment_lines(const char* string) {
+uint8_t SAUCE_num_lines(const char* string) {
   int lines = 0;
   int length = strlen(string);
 

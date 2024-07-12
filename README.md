@@ -309,7 +309,7 @@ Fill a SAUCE struct with the default fields. ID and Version fields will be set
 to their required values. All other fields will be set to their defaults, which
 is typically 0 or spaces.
 
-### `SAUCE_num_comment_lines(const char* string)`
+### `SAUCE_num_lines(const char* string)`
 Determine how many comment lines a string will need in order to place it in a CommentBlock.
 
 ### `SAUCE_COMMENT_BLOCK_SIZE(lines)`
