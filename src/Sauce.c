@@ -1,5 +1,66 @@
-#include "Sauce.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include "Sauce.h"
+
+// The SAUCE error message
+static char* error_msg = NULL;
+
+
+/**
+ * @brief Set the current error message using the `printf()` family formatting scheme.
+ * 
+ * @param format format string
+ * @param ... optional arguments to be formatted
+ */
+static void SAUCE_set_error(const char* format, ...) {
+  va_list ap;
+
+  // free the error message
+  if (error_msg != NULL) {
+    free(error_msg);
+    error_msg = NULL;
+  }
+
+  //TODO: if using Visual Studio, must be at least 2015
+  //TODO: how do I require that?
+
+  // get the length of the formatted string
+  va_start(ap, format);
+  int len = vsnprintf(NULL, 0, format, ap);
+  va_end(ap);
+  if (len < 0) {
+    error_msg = malloc(128);
+    snprintf(error_msg, 128, "FATAL: vsnprintf failed to get the formatted error message length");
+    return;
+  }
+
+  // malloc and copy the formatted string
+  error_msg = malloc(len + 1);
+  va_start(ap, format);
+  int res = vsnprintf(error_msg, len + 1, format, ap);
+  va_end(ap);
+  if (res < 0) {
+    free(error_msg);
+    error_msg = malloc(128);
+    snprintf(error_msg, 128, "FATAL: vsnprintf failed to write the formatted error message to error_msg string");
+    return;
+  }
+  if (len != res) {
+    free(error_msg);
+    error_msg = malloc(128);
+    snprintf(error_msg, 128, "FATAL: vsnprintf only wrote %d characters instead of expected %d characters", res, len);
+    return;
+  }
+
+  return;
+}
+
+
+
+
+
 
 // Helper Functions
 
@@ -9,7 +70,7 @@
  * @return an error message, or an empty string if no SAUCE error has yet to occur
  */
 const char* SAUCE_get_error(void) {
-  return "";
+  return error_msg;
 }
 
 
