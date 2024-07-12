@@ -31,13 +31,18 @@ You can see the [official specification](https://www.acid.org/info/sauce/sauce.h
 
 ## Summary
 
-The intention of this library is to offer a way to read, write, replace, remove, and check SAUCE records and comment blocks from files and buffer arrays. 
+The intention of this library is to offer a way to read, write, remove, and check the correctness of SAUCE records and comment blocks from files and buffer arrays. 
 
+### What counts as a Record or a Comment?
 Any checks for SAUCE data correctness strictly follow the [requirements](#sauce-record-requirements) listed further below. Checking or validating any of the fields which are marked as *not required* by the [SAUCE Layout table](https://www.acid.org/info/sauce/sauce.htm), with the exception of the `Comments` field, are beyond the scope of this project.
 
-This library provides functions to access and modify files and buffer arrays of bytes. The file functions are the most convenient and are adequate for most cases. However, if frequently reopening files is a concern for you or would be impractical, the buffer functions are your solution.
+The read, write, and remove functions will not perform checks for correctness on records or comments. In order to find records or comments, all that will be checked are the `SAUCE` and `COMNT` IDs and the record's `Comments` field. If the IDs or `Comments` field are incorrect, then the record/comment is either missing or incorrect. 
 
+
+### What are the functions I can use?
 There are 2 distinct sets of functions for **files** and for **buffer** arrays. Functions that access **files** follow a similiar naming convention to the C std I/O File library (e.g. `SAUCE_fread()`, `SAUCE_Comment_fwrite()`, etc.). Functions that access **buffers** have similiar names but are missing the `f` character (e.g. `SAUCE_read()`, `SAUCE_Comment_write()`, etc.).
+
+The file functions are the most convenient and are adequate for most cases. However, if frequently reopening files is a concern for you or would be impractical, the buffer functions are your solution.
 
 See the Usage section in the [Table of Contents](#table-of-contents) for info on how to use this library.
 
@@ -142,7 +147,7 @@ The field descriptions are:
 
 
 ## Reading
-Functions are provided to find and read SAUCE records and CommentBlocks from files/buffers.
+Functions are provided to find and read SAUCE records and CommentBlocks from files/buffers. 
 
 **NOTE**: It is recommended that you first read the SAUCE record to determine how many comment lines exist *before* you attempt to read the comment. However, if you only care for the full comment, attempting to read 255 lines of the comment is guaranteed to give you all available lines.
 
@@ -161,7 +166,7 @@ Functions are provided to find and read SAUCE records and CommentBlocks from fil
 
 
 #### `SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines)`
-- From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`. If the buffer does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
+- From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `block`. If the buffer does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
 
 
 ### Return Values
@@ -191,7 +196,7 @@ The write functions can be used to **write** new SAUCE records/CommentBlocks or 
 - Write a SAUCE CommentBlock to a file, replacing a CommentBlock if one already exists.
 - `comment` must be null-terminated.
 - The "Comments" field of the file's SAUCE record will be updated to the new number of comment lines.
-- **NOTE**: The null character is not included in the written SAUCE record. The comment's last line will be padded with spaces if the comment can't fill the entire line.
+- **NOTE**: The null character of the comment string is not included in the written SAUCE CommentBlock. The comment's last line will be padded with spaces if the comment can't fill the entire line.
 
 #### `SAUCE_write(const char* buffer, uint32_t n, const SAUCE* sauce)`
 - Write a SAUCE record to a buffer.
@@ -204,7 +209,7 @@ The write functions can be used to **write** new SAUCE records/CommentBlocks or 
 - If the last 128 bytes of the buffer (bytes `n-1` to `n-128`) contain a SAUCE record, the CommentBlock will be written. Otherwise, an error will be returned.
 - The "Comments" field of the buffer's SAUCE record will be updated to the new number of comment lines.
 - **Important**: To prevent a buffer overflow error when writing a new comment, the buffer's actual size must be at least `n` + `SAUCE_COMMENT_BLOCK_SIZE(number of comment lines)`.
-- **NOTE**: The null character is not included in the written SAUCE record. The comment's last line will be padded with spaces if the comment can't fill the entire line.
+- **NOTE**: The null character of the comment string is not included in the written SAUCE CommentBlock. The comment's last line will be padded with spaces if the comment can't fill the entire line.
 
 
 ### Return Values
@@ -254,19 +259,19 @@ On success, all **buffer** remove functions will return the new length of the bu
 
 ### Functions
 #### `SAUCE_check_file(const char* filepath)`
-- Check if a file contains valid SAUCE data. 
+- Check if a file contains correct SAUCE data. 
 - This will check the SAUCE data against the SAUCE record and CommentBlock [requirements](#sauce-record-requirements).
 
 #### `SAUCE_check_buffer(const char* buffer, uint32_t n)`
-- Check if the first `n` bytes of a buffer contain valid SAUCE data.
+- Check if the first `n` bytes of a buffer contain correct SAUCE data.
 - This will check the SAUCE data against the SAUCE record and CommentBlock [requirements](#sauce-record-requirements).
 
 #### `SAUCE_equal(const SAUCE* first, const SAUCE* second)`
-- Check two SAUCE records for equality.
+- Determine if two SAUCE records are equal.
 - SAUCE records are equal if each field between the SAUCE records match.
 
 #### `SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second)`
-- Check two SAUCE_CommentBlocks for equality.
+- Determine if two SAUCE_CommentBlocks are equal.
 - SAUCE_CommentBlocks are equal if the content of each field match between the CommentBlocks.
 
 ### Return Values

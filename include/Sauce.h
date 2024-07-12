@@ -52,9 +52,9 @@ typedef struct SAUCE_CommentBlock {
 
 
 /**
- * @brief SAUCE DataType mapping. Refer to SAUCE specification
- *        (https://www.acid.org/info/sauce/sauce.htm#FileType) for details on
- *        determining FileType.
+ * @brief Enum constants to help with identifying SAUCE DataTypes. 
+ *        Refer to SAUCE specification (https://www.acid.org/info/sauce/sauce.htm#FileType) 
+ *        for details on determining FileType.
  * 
  */
 enum SAUCE_DataType {
@@ -71,9 +71,9 @@ enum SAUCE_DataType {
 
 
 /**
- * @brief SAUCE FileType mapping. Refer to SAUCE specification 
- *        (https://www.acid.org/info/sauce/sauce.htm#FileType) for details on
- *        what files are supported and how to parse the TInfo.
+ * @brief Enum constants to help with identifying SAUCE FileTypes. 
+ *        Refer to SAUCE specification (https://www.acid.org/info/sauce/sauce.htm#FileType) 
+ *        for details on what files are supported and how to parse the TInfo.
  * 
  */
 enum SAUCE_FileType {
@@ -163,7 +163,8 @@ enum SAUCE_FileType {
 // The size of a SAUCE record in bytes
 #define SAUCE_RECORD_SIZE             128
 
-// Determine how large a comment block will be in bytes according to the number of lines present
+// Determine how large a comment block will be in bytes according to the number of lines present.
+// This includes the 5 bytes for the COMNT id.
 #define SAUCE_COMMENT_BLOCK_SIZE(lines)         (lines * SAUCE_COMMENT_LINE_LENGTH + 5)
 
 
@@ -228,12 +229,16 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce);
 
 
 /**
- * @brief From a file, read `nLines` of a SAUCE CommentBlock into `block`.
+ * @brief From a file, read at most `nLines` of a SAUCE CommentBlock into `block`.
+ * 
+ * 
+ *        If the file does not contain a comment or the actual number of lines is less
+ *        than `nLines`, then expect 0 lines or all lines to be read, respectively.
  * 
  * @param filepath a path to a file 
  * @param block a SAUCE_CommentBlock to be filled with the comment
  * @param nLines the number of lines to read
- * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
+ * @return On success, the number of lines read. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
 int SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines);
@@ -252,13 +257,17 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce);
 
 
 /**
- * @brief From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`.
+ * @brief From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `block`.
+ * 
+ * 
+ *        If the buffer does not contain a comment or the actual number of lines is less than nLines, 
+ *        then expect 0 lines or all lines to be read, respectively.
  * 
  * @param buffer pointer to a buffer
  * @param n the length of the buffer
  * @param block a SAUCE_CommentBlock to be filled with the comment
  * @param nLines the number of lines to read
- * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
+ * @return On success, the number of lines read. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
 int SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines);
@@ -285,6 +294,10 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce);
  * @brief Write a SAUCE CommentBlock to a file, replacing a CommentBlock if one already exists.
  *        The "Comments" field of the file's SAUCE record will be updated to the new number of comment
  *        lines.
+ * 
+ *        
+ *        The null character of the comment string is not included in the written SAUCE CommentBlock.
+ *        The comment's last line will be padded with spaces if the comment can't fill the entire line.
  * 
  * @param filepath a path to a file
  * @param comment a null-terminated comment string
@@ -323,6 +336,9 @@ int SAUCE_write(const char* buffer, uint32_t n, const SAUCE* sauce);
  *        will be updated to the new number of comment lines.
  *        Important! - To prevent a buffer overflow error when writing a new comment, 
  *        the buffer's actual size must be at least `n` + `SAUCE_COMMENT_BLOCK_SIZE(number of comment lines)`.
+ * 
+ *        The null character of the comment string is not included in the written SAUCE CommentBlock.
+ *        The comment's last line will be padded with spaces if the comment can't fill the entire line.
  * 
  * @param buffer pointer to buffer
  * @param n the length of the buffer
@@ -393,48 +409,46 @@ int SAUCE_Comment_remove(const char* buffer, uint32_t n);
 /**
  * @brief Check if a file contains valid SAUCE data. This will check the SAUCE data against
  *        the SAUCE record and CommentBlock requirements listed in the docs.
- *        TODO: add link to requirements
  * 
  * @param filepath path to a file
- * @return 1 (true) if the file contains valid SAUCE data; 0 (false) if the file does not contain valid
- *         SAUCE data. If 0 is returned, you can call `SAUCE_get_error()` to learn more about
- *         why the check failed.
+ * @return 1 (i.e. true) if the file contains correct SAUCE data; 0 (i.e. false) if the file does not contain any
+ *         SAUCE data or if the SAUCE data was incorrect. If 0 is returned, you can call `SAUCE_get_error()` to 
+ *         learn more about why the check failed.
  */
 int SAUCE_check_file(const char* filepath);
 
 
 /**
- * @brief Check if the first `n` bytes of a buffer contain valid SAUCE data. This will check
+ * @brief Check if the first `n` bytes of a buffer contain correct SAUCE data. This will check
  *        the data against the SAUCE record and CommentBlock requirements listed in the docs.
- *        TODO: add link to requirements
  * 
  * @param buffer pointer to a buffer
  * @param n the length of the buffer
- * @return 1 (true) if the buffer contains valid SAUCE data; 0 (false) if the buffer does not contain valid
- *         SAUCE data. If 0 is returned, you can call `SAUCE_get_error()` to learn more about
- *         why the check failed.
+ * @return 1 (i.e true) if the buffer contains correct SAUCE data; 0 (i.e. false) if the buffer does not contain any
+ *         SAUCE data or if the SAUCE data was incorrect. If 0 is returned, you can call `SAUCE_get_error()` to 
+ *         learn more about why the check failed.
  */
 int SAUCE_check_buffer(const char* buffer, uint32_t n);
 
 
 /**
- * @brief Check two SAUCE records for equality. SAUCE records are equal if
+ * @brief Determine if two SAUCE records are equal. SAUCE records are equal if
  *        each field between the SAUCE records match.
  * 
  * @param first the first SAUCE struct
  * @param second the second SAUCE struct
- * @return 1 (true) if the records are equal; 0 (false) if the records are not equal
+ * @return 1 (i.e. true) if the records are equal; 0 (i.e. false) if the records are not equal
  */
 int SAUCE_equal(const SAUCE* first, const SAUCE* second);
 
 
 /**
- * @brief Check two SAUCE_CommentBlocks for equality. SAUCE_CommentBlocks are equal
+ * @brief Determine if two SAUCE_CommentBlocks are equal. SAUCE_CommentBlocks are equal
  *        if the content of each field match between the CommentBlocks.
  * 
  * @param first the first SAUCE struct
  * @param second the second SAUCE struct
- * @return 1 (true) if the CommentBlocks are equal; 0 (false) if the CommentBlocks are not equal
+ * @return 1 (i.e. true) if the CommentBlocks are equal; 0 (i.e. false) if the CommentBlocks are not equal
  */
 int SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second);
 
