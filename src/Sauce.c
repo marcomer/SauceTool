@@ -63,6 +63,24 @@ static void SAUCE_set_error(const char* format, ...) {
 }
 
 
+/**
+ * @brief Get the size of file. Sets file pointer to the beginning
+ *        of the file when done. Files over 2GB are not supported.
+ * 
+ * @param file open file pointer
+ * @return size of the file
+ */
+static uint32_t get_file_size(FILE* file) {
+  if (file == NULL) return 0;
+
+  fseek(file, 0, SEEK_END);
+  long size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  return size;
+}
+
+
 
 
 
@@ -137,7 +155,57 @@ uint8_t SAUCE_num_lines(const char* string) {
  *         to get more info on the error.
  */
 int SAUCE_fread(const char* filepath, SAUCE* sauce) {
-  return -1;
+  // null checks
+  if (filepath == NULL) {
+    SAUCE_set_error("Filepath was NULL");
+    return SAUCE_ENULL;
+  }
+  if (sauce == NULL) {
+    SAUCE_set_error("SAUCE struct was NULL");
+    return SAUCE_ENULL;
+  }
+
+  // open file
+  FILE* file = fopen(filepath, "rb");
+  if (file == NULL) {
+    SAUCE_set_error("Could not open %s", filepath);
+    return SAUCE_EFOPEN;
+  }
+
+  // check file size
+  uint32_t fileSize;
+  if ((fileSize = get_file_size(file)) < SAUCE_RECORD_SIZE) {
+    fclose(file);
+    SAUCE_set_error("%s has a file size of %u, which is too short to contain a record", filepath, fileSize);
+    return SAUCE_ESHORT;
+  }
+
+  // seek to the last 128 bytes
+  if (fseek(file, -SAUCE_RECORD_SIZE, SEEK_END) < 0) {
+    fclose(file);
+    SAUCE_set_error("Failed to seek to record in %s", filepath);
+    return SAUCE_EFFAIL;
+  }
+
+  // read last 128 bytes into buffer and close the file
+  char buffer[SAUCE_RECORD_SIZE];
+  int read = fread(buffer, 1, SAUCE_RECORD_SIZE, file);
+  fclose(file);
+  if (read < SAUCE_RECORD_SIZE) {
+    SAUCE_set_error("Failed to read 128 bytes from %s", filepath);
+    return SAUCE_EFFAIL;
+  }
+
+  // find the SAUCE id
+  if (memcmp(buffer, "SAUCE", 5) != 0) {
+    SAUCE_set_error("Could not find SAUCE id in %s", filepath);
+    return SAUCE_ERMISS;
+  }
+
+  // copy the record
+  memcpy(sauce, buffer, SAUCE_RECORD_SIZE);
+
+  return 0;
 }
 
 
