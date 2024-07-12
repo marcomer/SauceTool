@@ -73,6 +73,7 @@ SAUCE* test_get_testfile2_expected_record() {
   SAUCE_set_default(&expected);
   memcpy(expected.Title, "TestFile2", 9);
   memcpy(expected.Author, "marcomer", 8);
+  memcpy(expected.Group, "SomeGroup", 9);
   memcpy(expected.Date, "20240627", 8);
   expected.FileSize = 0;
   expected.DataType = 1;
