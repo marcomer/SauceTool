@@ -9,6 +9,7 @@
  * @brief Struct containing SAUCE record data.
  * 
  */
+#pragma pack(push, 1)
 typedef struct SAUCE {
   char          ID[5];            // SAUCE identification. This should be equal to "SAUCE"
   char          Version[2];       // SAUCE version number, should be "00"
@@ -27,6 +28,7 @@ typedef struct SAUCE {
   uint8_t       TFlags;           // Type dependent flags 
   char          TInfoS[22];       // Type dependent string information field
 } SAUCE;
+#pragma pack(pop)
 
 
 
