@@ -81,6 +81,51 @@ static uint32_t get_file_size(FILE* file) {
 }
 
 
+/**
+ * @brief If it is certain that an EOF character does not exist in a correct position
+ *        in the buffer, then an EOF character will be inserted into the buffer.
+ * 
+ * @param buffer pointer to buffer containing a SAUCE record
+ * @param n length of buffer
+ * @return the new length of the buffer
+ */
+static uint32_t insert_eof_char(char* buffer, uint32_t n) {
+  if (n < SAUCE_RECORD_SIZE) return n;
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) return n;
+
+
+  uint8_t lines = ((SAUCE*)(&buffer[n-SAUCE_RECORD_SIZE]))->Comments;
+  if (lines > 0) {
+    // comment could exist, check if n is large enough to contain EOF
+    if (n > SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines)) {
+      uint32_t comment_index = n - (SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines));
+      // check for COMNT id and if EOF character doesn't exist before it
+      if (memcmp(&buffer[comment_index], "COMNT", 5) == 0 && buffer[comment_index-1] != SAUCE_EOF_CHAR) {
+        // move SAUCE data forward 1 byte
+        memmove(&buffer[comment_index + 1], &buffer[comment_index], SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines));
+        buffer[comment_index] = SAUCE_EOF_CHAR; // insert EOF
+        return n + 1;
+      } 
+    }
+  } else {
+    // no comment exists, look immediately before record
+    if (n == SAUCE_RECORD_SIZE) {
+      memmove(&buffer[1], buffer, SAUCE_RECORD_SIZE);
+      buffer[0] = SAUCE_EOF_CHAR;
+      return n + 1;
+    }
+    if (buffer[n - SAUCE_RECORD_SIZE - 1] != SAUCE_EOF_CHAR) {
+      // move record forward 1 byte
+      memmove(&buffer[n - SAUCE_RECORD_SIZE + 1], &buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
+      buffer[n - SAUCE_RECORD_SIZE] = SAUCE_EOF_CHAR; // insert EOF
+      return n + 1;
+    } 
+  }
+
+  // either an EOF already existed or it was uncertain
+  return n;
+}
+
 
 
 
@@ -328,8 +373,69 @@ int SAUCE_Comment_fwrite(const char* filepath, const char* comment) {
  * @return On success, the new length of the buffer is returned. On error, a negative error code
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
-int SAUCE_write(const char* buffer, uint32_t n, const SAUCE* sauce) {
-  return -1;
+int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
+  // null checks
+  if (buffer == NULL) {
+    SAUCE_set_error("Buffer was NULL");
+    return SAUCE_ENULL;
+  }
+  if (sauce == NULL) {
+    SAUCE_set_error("SAUCE struct was NULL");
+    return SAUCE_ENULL;
+  }
+
+  uint32_t len = n;
+
+  // check the size of the buffer
+  if (n >= SAUCE_RECORD_SIZE) {
+    // look for SAUCE id
+    if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) == 0) {
+      goto replace; // there is a record, replace it
+    }
+    goto append; // there is no record, append the new record
+  } else {
+    goto append; // buffer to short to have record, append the new record
+  }
+
+
+  // ===== Append a new record =====
+  append:
+    if (len == 0) {
+      buffer[0] = SAUCE_EOF_CHAR; // add eof
+      len++;
+    } else if (buffer[len-1] != SAUCE_EOF_CHAR) {
+      buffer[len] = SAUCE_EOF_CHAR; // add eof
+      len++;
+    }
+
+    memcpy(&buffer[len], "SAUCE", 5);
+    len += 5;
+    memcpy(&buffer[len], ((uint8_t*)sauce)+5, SAUCE_RECORD_SIZE - 5);
+    len += (SAUCE_RECORD_SIZE - 5);
+
+    // set the Comments field to 0
+    ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments = 0;
+
+    return len;
+  // ===== end of append section =====
+
+  // ===== Replace the record =====
+  replace:
+    // save Comments field
+    uint8_t lines = ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments;
+
+    // replace the record
+    memcpy(&buffer[len - SAUCE_RECORD_SIZE], "SAUCE", 5);
+    memcpy(&buffer[len - SAUCE_RECORD_SIZE + 5], ((uint8_t*)sauce)+5, SAUCE_RECORD_SIZE - 5);
+    
+    // set comments to original value
+    ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments = lines;
+
+    // attempt to insert an EOF character
+    len = insert_eof_char(buffer, len);
+
+    return len;
+  // ===== end of replace section =====
 }
 
 
