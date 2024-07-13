@@ -166,7 +166,7 @@ int test_file_matches_expected(const char* actual_filepath, const char* expected
 int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* expected_filepath) {
   FILE* expected = fopen(expected_filepath, "rb");
   if (expected == NULL) {
-    fprintf(stderr, "Failed to open %s", expected_filepath);
+    fprintf(stderr, "Failed to open %s\n", expected_filepath);
     return 0;
   }
 
@@ -176,20 +176,20 @@ int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* exp
 
   // compare file sizes
   if (expectedSize != n) {
-    fprintf(stderr, "Expected file size != actual file size");
+    fprintf(stderr, "Expected file size != buffer length\n");
     goto failed;
   }
 
   // get file contents
   int read = fread(expectedBuf, 1, expectedSize, expected);
   if (read != expectedSize) {
-    fprintf(stderr, "Failed to read all of expected file");
+    fprintf(stderr, "Failed to read all of expected file %s\n", expected_filepath);
     goto failed;
   }
 
   // get file contents
   if (memcmp(expectedBuf, buffer, expectedSize) != 0) {
-    fprintf(stderr, "Failed to read all of actual file");
+    fprintf(stderr, "Buffer did not match %s\n", expected_filepath);
     goto failed;
   }
 

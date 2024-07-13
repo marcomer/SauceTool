@@ -39,7 +39,7 @@
 // Expected write file results. These files should not be changed
 
 // Result of writing to an empty file
-#define SAUCE_WRITETOEMPTY_PATH   "expect/write/WriteToEmpty.txt"
+#define SAUCE_WRITETOEMPTY_PATH   "expect/write/WriteToEmptyExpect.txt"
 
 // Result of replacing TestFile1's SAUCE record
 #define SAUCE_REPLACE_PATH        "expect/write/ReplaceExpect.txt"

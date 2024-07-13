@@ -13,7 +13,7 @@ void set_sauce(SAUCE* sauce) {
 
   memcpy(sauce->Title, "WriteFile", 9);
   memcpy(sauce->Author, "testauthor", 10);
-  memcpy(sauce->Group, "NoGroup", 8);
+  memcpy(sauce->Group, "NoGroup", 7);
   memcpy(sauce->Date, "20000101", 8);
   memcpy(sauce->TInfoS, "FontName", 8);
 
@@ -109,7 +109,7 @@ void should_ReplaceSAUCE_when_FileOnlyContainsSAUCE() {
 }
 
 
-void should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsSAUCEWithNoEOF() {
+void should_ReplaceSAUCEAndAddEOF_when_FileContainsFullSAUCEWithNoEOF() {
   // copy SauceButNoEOF.ans to actual
   if (copy_file(SAUCE_SAUCEBUTNOEOF_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
     TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans to write_actual.txt");
@@ -120,8 +120,22 @@ void should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsSAUCEWithNoEOF() {
   int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
   TEST_ASSERT_EQUAL(0, res);
 
-  // WriteToEmpty is equivalent to replacing a file that only contains SAUCE
-  // An EOF character should be added as well
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_REPLACE_PATH));
+}
+
+
+void should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsRecordWithNoEOF() {
+  // copy OnlyRecord.ans to actual
+  if (copy_file(SAUCE_ONLYRECORD_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy OnlyRecord.ans to write_actual.txt");
+    return;
+  }
+
+  // replace actual's SAUCE and add EOF
+  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
+  TEST_ASSERT_EQUAL(0, res);
+
+  // replacing record in OnlyRecord.ans and adding EOF is equivalent to WriteToEmptyExpect
   TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_WRITETOEMPTY_PATH));
 }
 
@@ -190,7 +204,7 @@ void should_ReplaceSAUCE_when_BufferOnlyContainsSAUCE() {
 }
 
 
-void should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsSAUCEWithNoEOF() {
+void should_ReplaceSAUCEAndAddEOF_when_BufferContainsFullSAUCEWithNoEOF() {
   // copy SauceButNoEOF.ans to the buffer
   int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
   if (length <= 0) {
@@ -199,11 +213,26 @@ void should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsSAUCEWithNoEOF() {
   }
 
   // replace buffer's SAUCE and add EOF
-  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
+  int res = SAUCE_write(buffer, length, &sauce);
   TEST_ASSERT_EQUAL(length + 1, res);
 
-  // WriteToEmpty is equivalent to replacing a file that only contains SAUCE
-  // An EOF character should be added as well
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_REPLACE_PATH));
+}
+
+
+void should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsRecordWithNoEOF() {
+  // copy OnlyRecord.ans to actual
+  int length = copy_file_into_buffer(SAUCE_ONLYRECORD_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy OnlyRecord.ans into the buffer");
+    return;
+  }
+
+  // replace buffer's SAUCE and add EOF
+  int res = SAUCE_write(buffer, length, &sauce);
+  TEST_ASSERT_EQUAL(length + 1, res);
+
+  // replacing record in OnlyRecord.ans and adding EOF is equivalent to WriteToEmptyExpect
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_WRITETOEMPTY_PATH));
 }
 
@@ -271,12 +300,14 @@ int main(int argc, char** argv) {
   RUN_TEST(should_AppendToFile_when_FileContainsContent);
   RUN_TEST(should_ReplaceSAUCE_when_FileContainsSAUCE);
   RUN_TEST(should_ReplaceSAUCE_when_FileOnlyContainsSAUCE);
-  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsSAUCEWithNoEOF);
+  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_FileContainsFullSAUCEWithNoEOF);
+  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_WriteToBuffer_when_BufferLengthIsZero);
   RUN_TEST(should_AppendToBuffer_when_BufferContainsContent);
   RUN_TEST(should_ReplaceSAUCE_when_BufferContainsSAUCE);
   RUN_TEST(should_ReplaceSAUCE_when_BufferOnlyContainsSAUCE);
-  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsSAUCEWithNoEOF);
+  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_BufferContainsFullSAUCEWithNoEOF);
+  RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_BufferOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_FailToWrite_when_FileDoesNotExist);
   RUN_TEST(should_FailToWrite_when_FilePathIsNull);
   RUN_TEST(should_FailToWrite_when_FileSauceIsNull);
