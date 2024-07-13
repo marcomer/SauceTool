@@ -4,6 +4,8 @@
 1. [What is SAUCE?](#what-is-sauce)
 2. Core Ideas
     - [Summary](#summary)
+        - [What counts as a Record or a Comment?](#what-counts-as-a-record-or-a-comment)
+        - [What functions can I use?](#what-functions-can-i-use)
     - [Assumptions To Keep In Mind](#assumptions-to-keep-in-mind)
     - [The EOF Character](#the-eof-character)
     - SAUCE Requirements
@@ -36,10 +38,10 @@ The intention of this library is to offer a way to read, write, remove, and chec
 ### What counts as a Record or a Comment?
 Any checks for SAUCE data correctness strictly follow the [requirements](#sauce-record-requirements) listed further below. Checking or validating any of the fields which are marked as *not required* by the [SAUCE Layout table](https://www.acid.org/info/sauce/sauce.htm), with the exception of the `Comments` field, are beyond the scope of this project.
 
-The read, write, and remove functions will not perform checks for correctness on records or comments. In order to find records or comments, all that will be checked are the `SAUCE` and `COMNT` IDs and the record's `Comments` field. If the IDs or `Comments` field are incorrect, then the record/comment is either missing or incorrect. 
+The **read**, **write**, and **remove** functions will not perform checks for correctness on records or comments. In order to find records or comments, all that will be checked for are the `SAUCE` and `COMNT` IDs and the record's `Comments` field. If the IDs or `Comments` field are incorrect, then the record/comment is considered missing or invalid. 
 
 
-### What are the functions I can use?
+### What functions can I use?
 There are 2 distinct sets of functions for **files** and for **buffer** arrays. Functions that access **files** follow a similiar naming convention to the C std I/O File library (e.g. `SAUCE_fread()`, `SAUCE_Comment_fwrite()`, etc.). Functions that access **buffers** have similiar names but are missing the `f` character (e.g. `SAUCE_read()`, `SAUCE_Comment_write()`, etc.).
 
 The file functions are the most convenient and are adequate for most cases. However, if frequently reopening files is a concern for you or would be impractical, the buffer functions are your solution.
@@ -60,12 +62,11 @@ See the Usage section in the [Table of Contents](#table-of-contents) for info on
 ## The EOF Character
 SAUCE specifies that an EOF character (Decimal 26, Hex 1A, Ctrl+Z) should be placed immediately before the SAUCE data as a way to prevent a text/file viewer from reading the SAUCE data as text.
 
-Although EOF characters are important for text/file viewers, this library specifies that an EOF char is *not* required to **read** or **perform checks** on any SAUCE information. Refer to the [requirements](#sauce-record-requirements) section below for what is checked for when reading and performing checks.
+Although EOF characters are important for text/file viewers, this library specifies that an EOF char is *not* required to **read** or **perform checks** on any SAUCE information. Refer to [What counts as a Record or a Comment?](#what-counts-as-a-record-or-a-comment) for what is required for reading.
 
-When **writing** a SAUCE record or comment, an EOF character will be added if an EOF character does not already exist.
+The **write** functions will attempt to add an EOF character. An EOF character will only be added if the function is *certain* that an EOF does not already exist. The **remove** functions could also add an EOF, but only if you are removing a comment *and* if no EOF character already exists.
 
-When **removing** a SAUCE record, if an EOF character exists immediately before the SAUCE data, then the EOF character will be removed. If you are only removing a comment, the EOF will *not* be removed. If you are only removing a comment *and* there is no EOF character, then an EOF character will be added.
-
+The **remove** functions may remove an EOF character if one exists immediately before the SAUCE data. If you are only removing a comment and an EOF character exists, the EOF will *not* be removed.
 
 
 ## SAUCE Record Requirements
@@ -99,7 +100,7 @@ Currently, files over 2GB are not supported.
 
 Checking or validating any of the SAUCE record fields which are marked as *not required* by the [SAUCE Layout table](https://www.acid.org/info/sauce/sauce.htm), with the exception of the `Comments` field, are beyond the scope of this project.
 
-
+Remember, unexpected behavior may occur if your file/buffer contains invalid, misplaced, or otherwise non-standard SAUCE records/comments.
 
 ## Data Structures
 
