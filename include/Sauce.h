@@ -328,7 +328,7 @@ int SAUCE_Comment_fwrite(const char* filepath, const char* comment);
  * @return On success, the new length of the buffer is returned. On error, a negative error code
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
-int SAUCE_write(const char* buffer, uint32_t n, const SAUCE* sauce);
+int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce);
 
 
 /**
