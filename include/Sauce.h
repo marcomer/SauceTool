@@ -159,6 +159,9 @@ enum SAUCE_FileType {
 };
 
 
+// The EOF character value specified by SAUCE
+#define SAUCE_EOF_CHAR                0x1AU
+
 // The length of a single Comment Line
 #define SAUCE_COMMENT_LINE_LENGTH     64
 
