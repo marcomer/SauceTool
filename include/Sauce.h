@@ -170,9 +170,10 @@ enum SAUCE_FileType {
 
 // Determine how large a comment block will be in bytes according to the number of lines present.
 // This includes the 5 bytes for the COMNT id.
-#define SAUCE_COMMENT_BLOCK_SIZE(lines)         (lines * SAUCE_COMMENT_LINE_LENGTH + 5)
+#define SAUCE_COMMENT_BLOCK_SIZE(lines)         ((lines) ? (lines * SAUCE_COMMENT_LINE_LENGTH + 5) : 0)
 
-
+// Determine how large a record and optional comment 
+#define SAUCE_TOTAL_SIZE(lines)                 (SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines))
 
 
 // Error Codes

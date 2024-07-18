@@ -316,6 +316,8 @@ Determine how many comment lines a string will need in order to place it in a Co
 ### `SAUCE_COMMENT_BLOCK_SIZE(lines)`
 Macro function that determines how large an actual CommentBlock will be in bytes according to the number of lines present. This includes the 5 bytes for the COMNT id.
 
+### `SAUCE_TOTAL_SIZE(lines)`
+Macro function that determines how large a record and optional comment will be in bytes according to the number of lines present. 
 
 
 ## Error Codes
