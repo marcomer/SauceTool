@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project("SAUCE" C)
 
-set(CMAKE_C_STANDARD "11")
+set(CMAKE_C_STANDARD "99")
 
 # Add main SAUCE library
 add_library(Sauce STATIC
