@@ -328,3 +328,4 @@ Most functions will return an error code if an error occurs. Remember that you c
 - `SAUCE_ESHORT` - The given file/buffer was too short to contain a record
 - `SAUCE_ENULL` - A given pointer was NULL
 - `SAUCE_EFFAIL` - A file operation failed
+- `SAUCE_EEMPTY` - The file was empty

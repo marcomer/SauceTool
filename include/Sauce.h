@@ -184,7 +184,7 @@ enum SAUCE_FileType {
 #define SAUCE_ESHORT    -4    // The given file/buffer was too short to contain a record
 #define SAUCE_ENULL     -5    // A given pointer was NULL
 #define SAUCE_EFFAIL    -6    // A file operation failed
-
+#define SAUCE_EEMPTY    -7    // The file was empty
 
 
 
