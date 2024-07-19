@@ -710,13 +710,9 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
 
   // ===== Append a new record =====
   append:
-    if (len == 0) {
-      buffer[0] = SAUCE_EOF_CHAR; // add eof
-      len++;
-    } else if (buffer[len-1] != SAUCE_EOF_CHAR) {
-      buffer[len] = SAUCE_EOF_CHAR; // add eof
-      len++;
-    }
+    // add eof
+    buffer[len] = SAUCE_EOF_CHAR;
+    len++;
 
     memcpy(&buffer[len], "SAUCE", 5);
     len += 5;
