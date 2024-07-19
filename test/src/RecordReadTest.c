@@ -117,6 +117,12 @@ void should_FailOnReadFile_when_FilePathIsNull() {
 }
 
 
+void should_FailOnReadFile_When_FileIsEmpty() {
+  int res = SAUCE_fread(SAUCE_EMPTYFILE_PATH, &actual);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
+}
+
+
 
 
 // Buffer failure cases
@@ -149,6 +155,12 @@ void should_FailOnReadBuffer_when_BufferIsNULL() {
 void should_FailOnReadBuffer_when_SAUCEPointerIsNULL() {
   int res = SAUCE_read(testfile1_buffer, testfile1_length, NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+}
+
+
+void should_FailOnReadBuffer_when_BufferLengthIsZero() {
+  int res = SAUCE_read(testfile1_buffer, 0, &actual);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
 }
 
 
@@ -203,10 +215,12 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailOnReadFile_when_SAUCEPointerIsNull);
   RUN_TEST(should_FailOnReadFile_when_FileIsTooShort);
   RUN_TEST(should_FailOnReadFile_when_FilePathIsNull);
+  RUN_TEST(should_FailOnReadFile_When_FileIsEmpty);
   RUN_TEST(should_FailOnReadBuffer_when_SAUCEIsMissing);
   RUN_TEST(should_FailOnReadBuffer_when_BufferLengthIsTooShort);
   RUN_TEST(should_FailOnReadBuffer_when_BufferIsNULL);
   RUN_TEST(should_FailOnReadBuffer_when_SAUCEPointerIsNULL);
+  RUN_TEST(should_FailOnReadBuffer_when_BufferLengthIsZero);
 
   return UNITY_END();
 }

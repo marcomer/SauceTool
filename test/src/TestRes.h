@@ -38,6 +38,9 @@
 // NoSauceWithEOF.ans -> Contains normal file contents with an ending EOF character
 #define SAUCE_NOSAUCEWITHEOF_PATH       "expect/NoSauceWithEOF.ans"
 
+// EmptyFile.txt -> A completely empty file
+#define SAUCE_EMPTYFILE_PATH            "expect/EmptyFile.txt"
+
 
 // Expected write file results. These files should not be changed
 
