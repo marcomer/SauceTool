@@ -35,6 +35,9 @@
 // OnlyRecord -> Record from TestFile2.ans but with no EOF character
 #define SAUCE_ONLYRECORD_PATH           "expect/OnlyRecord.ans"
 
+// NoSauceWithEOF.ans -> Contains normal file contents with an ending EOF character
+#define SAUCE_NOSAUCEWITHEOF_PATH       "expect/NoSauceWithEOF.ans"
+
 
 // Expected write file results. These files should not be changed
 
@@ -46,6 +49,9 @@
 
 // Result of appending to a file
 #define SAUCE_APPEND_PATH         "expect/write/AppendExpect.txt"
+
+// Result of appending to NoSauceWithEOF.ans
+#define SAUCE_APPENDWITHEOF_PATH  "expect/write/AppendWithEOFExpect.txt"
 
 // File to contain the actual results of a test write
 #define SAUCE_WRITE_ACTUAL_PATH   "actual/write_actual.txt"

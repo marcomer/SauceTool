@@ -78,6 +78,22 @@ void should_AppendToFile_when_FileContainsContent() {
 }
 
 
+void should_AppendToFileAndAddEOF_when_FileContainsContentAndEOF() {
+  // copy NoSauceWithEOF.ans to actual
+  // an EOF should be added and the original EOF should also remain
+  if (copy_file(SAUCE_NOSAUCEWITHEOF_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy NoSauceWithEOF.ans to write_actual.txt");
+    return;
+  }
+
+  // append SAUCE to actual
+  int res = SAUCE_fwrite(SAUCE_WRITE_ACTUAL_PATH, &sauce);
+  TEST_ASSERT_EQUAL(0, res);
+
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_WRITE_ACTUAL_PATH, SAUCE_APPENDWITHEOF_PATH));
+}
+
+
 void should_ReplaceSAUCE_when_FileContainsSAUCE() {
   // copy TestFile1.ans to actual
   if (copy_file(SAUCE_TESTFILE1_PATH, SAUCE_WRITE_ACTUAL_PATH) != 0) {
@@ -168,6 +184,23 @@ void should_AppendToBuffer_when_BufferContainsContent() {
   TEST_ASSERT_EQUAL(length + 129, res);
 
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length + 129, SAUCE_APPEND_PATH));
+}
+
+
+void should_AppendToBufferAndAddEOF_when_BufferContainsContentAndEOF() {
+  // copy NoSauceWithEOF.ans to actual
+  // an EOF should be added and the original EOF should also remain
+  int length = copy_file_into_buffer(SAUCE_NOSAUCEWITHEOF_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy NoSauceWithEOF.ans into the buffer");
+    return;
+  }
+
+  // append SAUCE to actual
+  int res = SAUCE_write(buffer, length, &sauce);
+  TEST_ASSERT_EQUAL(length + 129, res);
+
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length + 129, SAUCE_APPENDWITHEOF_PATH));
 }
 
 
@@ -298,12 +331,14 @@ int main(int argc, char** argv) {
   
   RUN_TEST(should_WriteToFile_when_FileIsEmpty);
   RUN_TEST(should_AppendToFile_when_FileContainsContent);
+  RUN_TEST(should_AppendToFileAndAddEOF_when_FileContainsContentAndEOF);
   RUN_TEST(should_ReplaceSAUCE_when_FileContainsSAUCE);
   RUN_TEST(should_ReplaceSAUCE_when_FileOnlyContainsSAUCE);
   RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_FileContainsFullSAUCEWithNoEOF);
   RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_FileOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_WriteToBuffer_when_BufferLengthIsZero);
   RUN_TEST(should_AppendToBuffer_when_BufferContainsContent);
+  RUN_TEST(should_AppendToBufferAndAddEOF_when_BufferContainsContentAndEOF);
   RUN_TEST(should_ReplaceSAUCE_when_BufferContainsSAUCE);
   RUN_TEST(should_ReplaceSAUCE_when_BufferOnlyContainsSAUCE);
   RUN_TEST(should_ReplaceSAUCEAndAddEOF_when_BufferContainsFullSAUCEWithNoEOF);
