@@ -197,14 +197,13 @@ int copy_file(const char* src, const char* dest) {
     return -1;
   }
 
-
   // copy the file over
   char buffer[1024];
-  int read = 1;
+  size_t read = 0;
   int write = 0;
-  while(read > 0) {
+  while(1) {
     read = fread(buffer, 1, 1024, srcFile);
-    if (read <= 0) {
+    if (read == 0) {
       break;
     }
     write = fwrite(buffer, 1, read, destFile);
@@ -214,7 +213,6 @@ int copy_file(const char* src, const char* dest) {
       return -1;
     }
   }
-
 
   fclose(srcFile);
   fclose(destFile);
@@ -230,7 +228,7 @@ int copy_file_into_buffer(const char* srcFile, char* buffer) {
     return -1;
   }
 
-  int read;
+  size_t read;
   int total = 0;
   while (1) {
     read = fread(buffer + total, 1, 256, file);
