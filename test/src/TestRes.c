@@ -2,6 +2,9 @@
 #include <string.h>
 
 
+
+#define FILE_READ_SIZE    256
+
 const SAUCE default_record = {
   .ID = {'S','A','U','C','E'},
   .Version = {'0','0'},
@@ -20,15 +23,6 @@ const SAUCE default_record = {
   .TFlags = 0,
   .TInfoS = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,}
 };
-
-
-// Get the file size of an open file. Will rewind the file.
-long getFileSize(FILE* file) {
-  fseek(file, 0, SEEK_END);
-  long size = ftell(file);
-  rewind(file);
-  return size;
-}
 
 
 
@@ -114,39 +108,26 @@ int test_file_matches_expected(const char* actual_filepath, const char* expected
     return 0;
   }
 
-  // get the file sizes
-  long actualSize = getFileSize(actual);
-  long expectedSize = getFileSize(expected);
-
   // define file buffers
-  char actualBuf[actualSize];
-  char expectedBuf[expectedSize];
+  char actualBuf[FILE_READ_SIZE];
+  char expectedBuf[FILE_READ_SIZE];
+  size_t actualRead, expectedRead;
 
-  // compare file sizes
-  if (expectedSize != actualSize) {
-    fprintf(stderr, "Expected file size != actual file size");
-    goto failed;
-  }
+  while (1) {
+    actualRead = fread(actualBuf, 1, FILE_READ_SIZE, actual);
+    expectedRead = fread(expectedBuf, 1, FILE_READ_SIZE, expected);
+    if (actualRead == 0 && expectedRead == 0) {
+      break;
+    }
 
+    if (actualRead != expectedRead) {
+      goto failed;
+    }
 
-  // get actual file contents
-  int read = fread(actualBuf, 1, actualSize, actual);
-  if (read != actualSize) {
-    fprintf(stderr, "Failed to read all of actual file");
-    goto failed;
-  }
-
-  // get expected file contents
-  read = fread(expectedBuf, 1, expectedSize, expected);
-  if (read != expectedSize) {
-    fprintf(stderr, "Failed to read all of expected file");
-    goto failed;
-  }
-
-  // compare file contents
-  if (memcmp(expectedBuf, actualBuf, expectedSize) != 0) {
-    fprintf(stderr, "Failed to read all of actual file");
-    goto failed;
+    // compare buffers
+    if (memcmp(actualBuf, expectedBuf, actualRead) != 0) {
+      goto failed;
+    }
   }
 
   // success, return true
@@ -170,33 +151,30 @@ int test_buffer_matches_expected(const char* buffer, uint32_t n, const char* exp
     return 0;
   }
 
-  long expectedSize = getFileSize(expected);
+  char expectedBuf[FILE_READ_SIZE];
+  size_t read;
+  uint32_t total = 0;
 
-  char expectedBuf[expectedSize];
+  while(1) {
+    read = fread(expectedBuf, 1, FILE_READ_SIZE, expected);
+    if (read == 0) {
+      break;
+    }
 
-  // compare file sizes
-  if (expectedSize != n) {
-    fprintf(stderr, "Expected file size != buffer length\n");
-    goto failed;
-  }
+    if (total + read > n) {
+      goto failed;
+    }
 
-  // get file contents
-  int read = fread(expectedBuf, 1, expectedSize, expected);
-  if (read != expectedSize) {
-    fprintf(stderr, "Failed to read all of expected file %s\n", expected_filepath);
-    goto failed;
-  }
-
-  // get file contents
-  if (memcmp(expectedBuf, buffer, expectedSize) != 0) {
-    fprintf(stderr, "Buffer did not match %s\n", expected_filepath);
-    goto failed;
+    if (memcmp(expectedBuf, buffer+total, read) != 0) {
+      goto failed;
+    }
+ 
+    total += read;
   }
 
   // success, return true
   fclose(expected);
   return 1;
-
 
   // failure case
   failed:
