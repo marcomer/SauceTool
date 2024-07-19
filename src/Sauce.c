@@ -455,7 +455,11 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
     return SAUCE_ENULL;
   }
 
-  // check if n is too short
+  if (n == 0) {
+    SAUCE_set_error("The buffer has a length of 0 and cannot contain a record");
+    return SAUCE_EEMPTY;
+  }
+
   if (n < SAUCE_RECORD_SIZE) {
     SAUCE_set_error("The buffer length of %u is too short to contain a record", n);
     return SAUCE_ESHORT;
