@@ -255,23 +255,6 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
 
 
 
-/**
- * @brief Get the size of file. Sets file pointer to the beginning
- *        of the file when done. Files over 2GB are not supported.
- * 
- * @param file open file pointer
- * @return size of the file
- */
-static uint32_t get_file_size(FILE* file) {
-  if (file == NULL) return 0;
-
-  fseek(file, 0, SEEK_END);
-  long size = ftell(file);
-  fseek(file, 0, SEEK_SET);
-
-  return size;
-}
-
 
 /**
  * @brief If it is certain that an EOF character does not exist in a correct position
@@ -409,38 +392,30 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce) {
     return SAUCE_EFOPEN;
   }
 
-  // check file size
-  uint32_t fileSize;
-  if ((fileSize = get_file_size(file)) < SAUCE_RECORD_SIZE) {
-    fclose(file);
-    SAUCE_set_error("%s has a file size of %u, which is too short to contain a record", filepath, fileSize);
-    return SAUCE_ESHORT;
-  }
-
-  // seek to the last 128 bytes
-  if (fseek(file, -SAUCE_RECORD_SIZE, SEEK_END) < 0) {
-    fclose(file);
-    SAUCE_set_error("Failed to seek to record in %s", filepath);
-    return SAUCE_EFFAIL;
-  }
-
-  // read last 128 bytes into buffer and close the file
-  char buffer[SAUCE_RECORD_SIZE];
-  int read = fread(buffer, 1, SAUCE_RECORD_SIZE, file);
+  // get record
+  char record[SAUCE_RECORD_SIZE + 1];
+  uint32_t filesize = 0;
+  int res = SAUCE_file_find_record(file, record, &filesize);
   fclose(file);
-  if (read < SAUCE_RECORD_SIZE) {
-    SAUCE_set_error("Failed to read 128 bytes from %s", filepath);
-    return SAUCE_EFFAIL;
-  }
-
-  // find the SAUCE id
-  if (memcmp(buffer, "SAUCE", 5) != 0) {
-    SAUCE_set_error("Could not find SAUCE id in %s", filepath);
+  if (res == SAUCE_EEMPTY) {
+    SAUCE_set_error("%s is empty and cannot contain a record", filepath);
+    return SAUCE_EEMPTY;
+  } else if (filesize < SAUCE_RECORD_SIZE) {
+    SAUCE_set_error("%s is too short to contain a record", filepath);
+    return SAUCE_ESHORT;
+  } else if (res == SAUCE_ERMISS) {
+    SAUCE_set_error("%s does not contain a record", filepath);
     return SAUCE_ERMISS;
+  } else if (res < 0) {
+    return res;
   }
 
-  // copy the record
-  memcpy(sauce, buffer, SAUCE_RECORD_SIZE);
+  // record was found, copy it into sauce
+  if (memcmp(record, "SAUCE", 5) == 0) {
+    memcpy(sauce, record, SAUCE_RECORD_SIZE);
+  } else {
+    memcpy(sauce, record+1, SAUCE_RECORD_SIZE);
+  }
 
   return 0;
 }
