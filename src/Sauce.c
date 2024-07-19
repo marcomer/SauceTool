@@ -279,22 +279,21 @@ static uint32_t get_file_size(FILE* file) {
  * 
  * @param buffer pointer to buffer containing a SAUCE record
  * @param n length of buffer
+ * @param lines the number of comment lines
  * @return the new length of the buffer
  */
-static uint32_t insert_eof_char(char* buffer, uint32_t n) {
+static uint32_t insert_eof_char(char* buffer, uint32_t n, uint8_t lines) {
   if (n < SAUCE_RECORD_SIZE) return n;
   if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) return n;
 
-
-  uint8_t lines = ((SAUCE*)(&buffer[n-SAUCE_RECORD_SIZE]))->Comments;
   if (lines > 0) {
     // comment could exist, check if n is large enough to contain EOF
-    if (n > SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines)) {
-      uint32_t comment_index = n - (SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines));
+    if (n > SAUCE_TOTAL_SIZE(lines)) {
+      uint32_t comment_index = n - SAUCE_TOTAL_SIZE(lines);
       // check for COMNT id and if EOF character doesn't exist before it
       if (memcmp(&buffer[comment_index], "COMNT", 5) == 0 && buffer[comment_index-1] != SAUCE_EOF_CHAR) {
         // move SAUCE data forward 1 byte
-        memmove(&buffer[comment_index + 1], &buffer[comment_index], SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines));
+        memmove(&buffer[comment_index + 1], &buffer[comment_index], SAUCE_TOTAL_SIZE(lines));
         buffer[comment_index] = SAUCE_EOF_CHAR; // insert EOF
         return n + 1;
       } 
@@ -302,12 +301,13 @@ static uint32_t insert_eof_char(char* buffer, uint32_t n) {
   } else {
     // no comment exists, look immediately before record
     if (n == SAUCE_RECORD_SIZE) {
+      // there is only a record in the file, insert eof at beginning of buffer
       memmove(&buffer[1], buffer, SAUCE_RECORD_SIZE);
       buffer[0] = SAUCE_EOF_CHAR;
       return n + 1;
     }
     if (buffer[n - SAUCE_RECORD_SIZE - 1] != SAUCE_EOF_CHAR) {
-      // move record forward 1 byte
+      // there is no eof before record, insert an eof before record
       memmove(&buffer[n - SAUCE_RECORD_SIZE + 1], &buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
       buffer[n - SAUCE_RECORD_SIZE] = SAUCE_EOF_CHAR; // insert EOF
       return n + 1;
@@ -738,7 +738,7 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
     ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments = lines;
 
     // attempt to insert an EOF character
-    len = insert_eof_char(buffer, len);
+    len = insert_eof_char(buffer, len, lines);
 
     return len;
   // ===== end of replace section =====
