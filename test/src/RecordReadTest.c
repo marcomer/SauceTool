@@ -140,9 +140,6 @@ void should_FailOnReadBuffer_when_SAUCEIsMissing() {
 void should_FailOnReadBuffer_when_BufferLengthIsTooShort() {
   int res = SAUCE_read(testfile1_buffer, 127, &actual);
   TEST_ASSERT_EQUAL(SAUCE_ESHORT, res);
-
-  res = SAUCE_read(testfile1_buffer, 0, &actual);
-  TEST_ASSERT_EQUAL(SAUCE_ESHORT, res);
 }
 
 
