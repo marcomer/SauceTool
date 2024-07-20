@@ -172,6 +172,10 @@ enum SAUCE_FileType {
 // This includes the 5 bytes for the COMNT id.
 #define SAUCE_COMMENT_BLOCK_SIZE(lines)         (((uint8_t)lines) ? ((uint8_t)lines * (uint16_t)SAUCE_COMMENT_LINE_LENGTH + 5) : 0)
 
+// Determine the length a comment string, not including a terminating null character.
+// This does not include the 5 bytes for a COMNT id, since that is not included in a comment string.
+#define SAUCE_COMMENT_STRING_LENGTH(lines)      (((uint8_t)lines) ? ((uint8_t)lines * (uint16_t)SAUCE_COMMENT_LINE_LENGTH) : 0)
+
 // Determine how large a record and optional comment 
 #define SAUCE_TOTAL_SIZE(lines)                 ((uint16_t)SAUCE_RECORD_SIZE + SAUCE_COMMENT_BLOCK_SIZE(lines))
 
