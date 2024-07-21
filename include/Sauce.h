@@ -147,6 +147,12 @@ enum SAUCE_FileType {
 };
 
 
+// The required value for the SAUCE record ID field
+#define SAUCE_RECORD_ID               "SAUCE"
+
+// The required value for the SAUCE CommentBlock ID field
+#define SAUCE_COMMENT_ID              "COMNT"
+
 // The EOF character value specified by SAUCE
 #define SAUCE_EOF_CHAR                0x1AU
 

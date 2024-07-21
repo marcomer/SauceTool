@@ -97,7 +97,7 @@ static void SAUCE_buffer_replace_record(char* buffer, const SAUCE* sauce) {
   uint8_t lines = ((SAUCE*)buffer)->Comments;
 
   // replace the record
-  memcpy(buffer, "SAUCE", 5);
+  memcpy(buffer, SAUCE_RECORD_ID, 5);
   memcpy(&buffer[5], ((uint8_t*)sauce)+5, SAUCE_RECORD_SIZE - 5);
   
   // set comments to original value
@@ -171,9 +171,9 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
 
   // check for SAUCE id
   if (total == SAUCE_RECORD_SIZE) {
-    if (memcmp(record, "SAUCE", 5) == 0) return 0;
+    if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) return 0;
   } else {
-    if (memcmp(record+1, "SAUCE", 5) == 0) return 0;
+    if (memcmp(record+1, SAUCE_RECORD_ID, 5) == 0) return 0;
   }
 
   // record does not exist
@@ -215,7 +215,7 @@ static int SAUCE_file_find_comment(FILE* file, char* comment, uint32_t filesize,
   int read = fread(comment, 1, SAUCE_COMMENT_BLOCK_SIZE(lines) + 1, file);
   
   // check for comment id, return if found
-  if (memcmp(((filesize == SAUCE_TOTAL_SIZE(lines)) ? comment : comment+1), "COMNT", 5) == 0) {
+  if (memcmp(((filesize == SAUCE_TOTAL_SIZE(lines)) ? comment : comment+1), SAUCE_COMMENT_ID, 5) == 0) {
     return 0;
   }
 
@@ -251,7 +251,7 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
   }
 
   char record[SAUCE_RECORD_SIZE];
-  memcpy(record, "SAUCE", 5);
+  memcpy(record, SAUCE_RECORD_ID, 5);
   memcpy(record+5, &(sauce->Version), SAUCE_RECORD_SIZE - 5);
   ((SAUCE*)(record))->Comments = 0;
 
@@ -281,14 +281,14 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
  */
 static uint32_t insert_eof_char(char* buffer, uint32_t n, uint8_t lines) {
   if (n < SAUCE_RECORD_SIZE) return n;
-  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) return n;
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5) != 0) return n;
 
   if (lines > 0) {
     // comment could exist, check if n is large enough to contain EOF
     if (n > SAUCE_TOTAL_SIZE(lines)) {
       uint32_t comment_index = n - SAUCE_TOTAL_SIZE(lines);
       // check for COMNT id and if EOF character doesn't exist before it
-      if (memcmp(&buffer[comment_index], "COMNT", 5) == 0 && buffer[comment_index-1] != SAUCE_EOF_CHAR) {
+      if (memcmp(&buffer[comment_index], SAUCE_COMMENT_ID, 5) == 0 && buffer[comment_index-1] != SAUCE_EOF_CHAR) {
         // move SAUCE data forward 1 byte
         memmove(&buffer[comment_index + 1], &buffer[comment_index], SAUCE_TOTAL_SIZE(lines));
         buffer[comment_index] = SAUCE_EOF_CHAR; // insert EOF
@@ -341,7 +341,7 @@ const char* SAUCE_get_error(void) {
 void SAUCE_set_default(SAUCE* sauce) {
   memset(sauce, 0, sizeof(SAUCE)); // zero everything out
 
-  memcpy(sauce->ID, "SAUCE", 5);
+  memcpy(sauce->ID, SAUCE_RECORD_ID, 5);
   memcpy(sauce->Version, "00", 2);
 
   // set the character fields to spaces
@@ -425,7 +425,7 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce) {
   }
 
   // record was found, copy it into sauce
-  if (memcmp(record, "SAUCE", 5) == 0) {
+  if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) {
     memcpy(sauce, record, SAUCE_RECORD_SIZE);
   } else {
     memcpy(sauce, record+1, SAUCE_RECORD_SIZE);
@@ -490,7 +490,7 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
 
   // get start of record
   uint8_t record_start = 1;
-  if (memcmp(record, "SAUCE", 5) == 0) record_start = 0;
+  if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) record_start = 0;
 
   
   // check if file's record has wrong num of comment lines
@@ -527,7 +527,7 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   }
 
   // grab comment lines
-  char* commentBuffer_start = (memcmp(commentBuffer+1, "COMNT", 5) == 0) ? commentBuffer+1 : commentBuffer;
+  char* commentBuffer_start = (memcmp(commentBuffer+1, SAUCE_COMMENT_ID, 5) == 0) ? commentBuffer+1 : commentBuffer;
   commentBuffer_start += 5;
   memcpy(comment, commentBuffer_start, SAUCE_COMMENT_STRING_LENGTH(nLines));
   comment[SAUCE_COMMENT_STRING_LENGTH(nLines)] = 0;
@@ -569,7 +569,7 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
 
 
   // find the SAUCE id
-  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) {
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5) != 0) {
     SAUCE_SET_ERROR("Could not find the SAUCE id in the buffer");
     return SAUCE_ERMISS;
   }
@@ -615,7 +615,7 @@ int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nL
   }
 
   // find the SAUCE id
-  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) {
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5) != 0) {
     SAUCE_SET_ERROR("Could not find the SAUCE id in the buffer");
     return SAUCE_ERMISS;
   }
@@ -637,7 +637,7 @@ int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nL
   }
 
   // check for COMNT id
-  if (memcmp(&buffer[n-SAUCE_TOTAL_SIZE(totalLines)], "COMNT", 5) != 0) {
+  if (memcmp(&buffer[n-SAUCE_TOTAL_SIZE(totalLines)], SAUCE_COMMENT_ID, 5) != 0) {
     SAUCE_SET_ERROR("Record in buffer indicated that %u total comment lines could be read, but the comment id could not be found", totalLines);
     return SAUCE_ECMISS;
   }
@@ -699,7 +699,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
 
   // determine where the record starts
   uint8_t record_start = 1;
-  if (res == 0 && memcmp(record, "SAUCE", 5) == 0) record_start = 0;
+  if (res == 0 && memcmp(record, SAUCE_RECORD_ID, 5) == 0) record_start = 0;
 
   // initialize operating buffer
   uint8_t lines = ((SAUCE*)(&record[record_start]))->Comments;
@@ -728,7 +728,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
     if (comment[0] == SAUCE_EOF_CHAR) eof_exists = 1;
 
     // copy comment and record to buffer
-    if (memcmp(comment, "COMNT", 5) == 0) {
+    if (memcmp(comment, SAUCE_COMMENT_ID, 5) == 0) {
       memcpy(buffer+1, comment, SAUCE_COMMENT_BLOCK_SIZE(lines));
     } else {
       memcpy(buffer, comment, SAUCE_COMMENT_BLOCK_SIZE(lines)+1);
@@ -833,7 +833,7 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
   // check the size of the buffer
   if (n >= SAUCE_RECORD_SIZE) {
     // look for SAUCE id
-    if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) == 0) {
+    if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5) == 0) {
       goto replace; // there is a record, replace it
     }
     goto append; // there is no record, append the new record
@@ -848,7 +848,7 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
     buffer[len] = SAUCE_EOF_CHAR;
     len++;
 
-    memcpy(&buffer[len], "SAUCE", 5);
+    memcpy(&buffer[len], SAUCE_RECORD_ID, 5);
     len += 5;
     memcpy(&buffer[len], ((uint8_t*)sauce)+5, SAUCE_RECORD_SIZE - 5);
     len += (SAUCE_RECORD_SIZE - 5);
@@ -865,7 +865,7 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
     uint8_t lines = ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments;
 
     // replace the record
-    memcpy(&buffer[len - SAUCE_RECORD_SIZE], "SAUCE", 5);
+    memcpy(&buffer[len - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5);
     memcpy(&buffer[len - SAUCE_RECORD_SIZE + 5], ((uint8_t*)sauce)+5, SAUCE_RECORD_SIZE - 5);
     
     // set comments to original value
