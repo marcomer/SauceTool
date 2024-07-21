@@ -39,8 +39,8 @@ void should_ReadComment_when_FileContainsComment() {
 
 
 void should_ReadNothing_when_FileContainsNoComment() {
-  // read NoSauce.txt
-  int res = SAUCE_Comment_fread(SAUCE_NOSAUCE_PATH, commentStr, 2);
+  // read TestFile2.ans, which has no comment but a record
+  int res = SAUCE_Comment_fread(SAUCE_TESTFILE2_PATH, commentStr, 2);
   TEST_ASSERT_EQUAL(0, res);
 }
 
@@ -73,9 +73,9 @@ void should_ReadComment_when_BufferContainsComment() {
 
 
 void should_ReadNothing_when_BufferContainsNoComment() {
-  int length = copy_file_into_buffer(SAUCE_NOSAUCE_PATH, buffer);
+  int length = copy_file_into_buffer(SAUCE_TESTFILE2_PATH, buffer);
   if (length <= 0) {
-    TEST_FAIL_MESSAGE("Failed to copy NoSauce.txt to the buffer");
+    TEST_FAIL_MESSAGE("Failed to copy TestFile2.ans to the buffer");
     return;
   }
 
