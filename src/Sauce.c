@@ -6,7 +6,7 @@
 
 // Static asserts
 #define SAUCE_STATIC_ASSERT(condition, message) \
-    typedef char STATIC_ASSERT_FAILED__##message[1]; typedef char STATIC_ASSERT_FAILED__##message[(condition)?1:0];
+    typedef char STATIC_ASSERT_FAILED__##message[2]; typedef char STATIC_ASSERT_FAILED__##message[(condition)?2:1];
 
 // Assert that the SAUCE struct must be exactly 128 bytes large, which can be achieved by packing the struct
 SAUCE_STATIC_ASSERT(sizeof(SAUCE) == 128, sizeof_SAUCE_struct_must_be_128_bytes);
