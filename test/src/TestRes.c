@@ -48,17 +48,14 @@ SAUCE* test_get_testfile1_expected_record() {
 }
 
 
-SAUCE_CommentBlock* test_get_testfile1_expected_comment() {
-  static SAUCE_CommentBlock block;
-  static char string[128];
+char* test_get_testfile1_expected_comment() {
+  static char string[129];
   memset(string, ' ', 128);
-  memcpy(block.ID, "COMNT", 5);
-  block.lines = 2;
+  string[128] = 0;
   
   memcpy(string, "This is the comments field on TestFile1. This was created using the Moebius ANSI art application.", 97);
-  block.comment = string;
 
-  return &block;
+  return string;
 }
 
 

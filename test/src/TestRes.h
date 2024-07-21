@@ -107,9 +107,11 @@
 extern const SAUCE default_record;
 
 
+#define TESTFILE1_EXPECTED_LINES    2
+
 SAUCE* test_get_testfile1_expected_record();
 
-SAUCE_CommentBlock* test_get_testfile1_expected_comment();
+char* test_get_testfile1_expected_comment();
 
 SAUCE* test_get_testfile2_expected_record();
 

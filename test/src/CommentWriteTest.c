@@ -9,35 +9,25 @@
 
 
 
-static SAUCE_CommentBlock shortComment;
-static SAUCE_CommentBlock longComment;
+static char shortComment[SAUCE_COMMENT_LINE_LENGTH];
+static char longComment[SAUCE_COMMENT_LINE_LENGTH * 25];
 static char buffer[2048];
 
 
 void setUp() {
   // create the short comment
-  static char shortString[SAUCE_COMMENT_LINE_LENGTH];
-  memset(shortString, 0, SAUCE_COMMENT_LINE_LENGTH);
-  memcpy(shortString, SHORT_COMMENT_MSG, sizeof(SHORT_COMMENT_MSG) - 1);
+
+  memset(shortComment, 0, SAUCE_COMMENT_LINE_LENGTH);
+  memcpy(shortComment, SHORT_COMMENT_MSG, sizeof(SHORT_COMMENT_MSG) - 1);
 
   // create the long comment
-  static char longString[SAUCE_COMMENT_LINE_LENGTH * 25];
-  memset(longString, 0, SAUCE_COMMENT_LINE_LENGTH * 25);
-  int len = copy_file_into_buffer(SAUCE_LONGNOSAUCE_PATH, longString);
+  static char longComment[SAUCE_COMMENT_LINE_LENGTH * 25];
+  memset(longComment, 0, SAUCE_COMMENT_LINE_LENGTH * 25);
+  int len = copy_file_into_buffer(SAUCE_LONGNOSAUCE_PATH, longComment);
   if (len <= 0) {
-    fprintf(stderr, "Failed to write %s to longString buffer", SAUCE_LONGNOSAUCE_PATH);
+    fprintf(stderr, "Failed to write %s to longComment string", SAUCE_LONGNOSAUCE_PATH);
     exit(-1);
   }
-
-  // create the shortComment block
-  memcpy(shortComment.ID, "COMNT", 5);
-  shortComment.lines = 1;
-  shortComment.comment = shortString;
-
-  // create the longComment block  
-  memcpy(longComment.ID, "COMNT", 5);
-  longComment.lines = 25;
-  longComment.comment = longString;
 
   // clear the buffer
   memset(buffer, 0, 2048);
@@ -65,7 +55,7 @@ void should_AddComment_when_FileContainsRecord() {
     return;
   }
 
-  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment.comment);
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment);
   TEST_ASSERT_EQUAL(0, res);
 
   TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_WRITE_ACTUAL_PATH, SAUCE_ADDCOMMENTTORECORD_PATH));
@@ -79,7 +69,7 @@ void should_ReplaceComment_when_FileContainsComment() {
     return;
   }
 
-  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, longComment.comment);
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, longComment);
   TEST_ASSERT_EQUAL(0, res);
 
   TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_WRITE_ACTUAL_PATH, SAUCE_REPLACEEXISTINGCOMMENT_PATH));
@@ -93,7 +83,7 @@ void should_AddCommentAndEOF_when_FileContainsRecordButNoEOF() {
     return;
   }
 
-  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment.comment);
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment);
   TEST_ASSERT_EQUAL(0, res);
 
   TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_WRITE_ACTUAL_PATH, SAUCE_ADDCOMMENTANDEOFTORECORD_PATH));
@@ -107,7 +97,7 @@ void should_ReplaceCommentAndAddEOF_when_FileContainsCommentButNoEOF() {
     return;
   }
 
-  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment.comment);
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment);
   TEST_ASSERT_EQUAL(0, res);
 
   TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_WRITE_ACTUAL_PATH, SAUCE_REPLACECOMMENTANDADDEOF_PATH));
@@ -127,7 +117,7 @@ void should_AddComment_when_BufferContainsRecord() {
     return;
   }
 
-  int res = SAUCE_Comment_write(buffer, length, shortComment.comment);
+  int res = SAUCE_Comment_write(buffer, length, shortComment);
   TEST_ASSERT_EQUAL(198, res);
 
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_ADDCOMMENTTORECORD_PATH));
@@ -142,7 +132,7 @@ void should_ReplaceComment_when_BufferContainsComment() {
     return;
   }
 
-  int res = SAUCE_Comment_write(buffer, length, longComment.comment);
+  int res = SAUCE_Comment_write(buffer, length, longComment);
   TEST_ASSERT_EQUAL(1758, res);
 
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_REPLACEEXISTINGCOMMENT_PATH));
@@ -157,7 +147,7 @@ void should_AddCommentAndEOF_when_BufferContainsRecordButNoEOF() {
     return;
   }
 
-  int res = SAUCE_Comment_write(buffer, length, shortComment.comment);
+  int res = SAUCE_Comment_write(buffer, length, shortComment);
   TEST_ASSERT_EQUAL(198, res);
 
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_ADDCOMMENTANDEOFTORECORD_PATH));
@@ -172,7 +162,7 @@ void should_ReplaceCommentAndAddEOF_when_BufferContainsCommentButNoEOF() {
     return;
   }
 
-  int res = SAUCE_Comment_write(buffer, length, shortComment.comment);
+  int res = SAUCE_Comment_write(buffer, length, shortComment);
   TEST_ASSERT_EQUAL(222, res);
 
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_REPLACECOMMENTANDADDEOF_PATH));
@@ -185,7 +175,7 @@ void should_ReplaceCommentAndAddEOF_when_BufferContainsCommentButNoEOF() {
 // File failure cases
 
 void should_FailToWrite_when_FileDoesNotExist() {
-  int res = SAUCE_Comment_fwrite("expect/FILEDOESNOTEXIST.mp4", shortComment.comment);
+  int res = SAUCE_Comment_fwrite("expect/FILEDOESNOTEXIST.mp4", shortComment);
   TEST_ASSERT_EQUAL(SAUCE_EFOPEN, res);
 }
 
@@ -196,7 +186,7 @@ void should_FailToWrite_when_FileIsTooShort() {
     return;
   }
 
-  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment.comment);
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment);
   TEST_ASSERT_EQUAL(SAUCE_ESHORT, res);
 
   // assert that the file didn't change
@@ -205,7 +195,7 @@ void should_FailToWrite_when_FileIsTooShort() {
 
 
 void should_FailToWrite_when_FilePathIsNull() {
-  int res = SAUCE_Comment_fwrite(NULL, shortComment.comment);
+  int res = SAUCE_Comment_fwrite(NULL, shortComment);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
 }
 
@@ -230,7 +220,7 @@ void should_FailToWriteToFile_when_FileContainsCommentButNoRecord() {
     return;
   }
 
-  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment.comment);
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment);
   TEST_ASSERT_EQUAL(SAUCE_ERMISS, res);
 
   // assert that the file didn't change
@@ -255,7 +245,7 @@ void should_FailToWrite_when_BufferIsTooShort() {
     return;
   }
 
-  int res = SAUCE_Comment_write(buffer, length, shortComment.comment);
+  int res = SAUCE_Comment_write(buffer, length, shortComment);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
 
   // assert that the buffer has not changed
@@ -264,25 +254,25 @@ void should_FailToWrite_when_BufferIsTooShort() {
 
 
 void should_FailToWRite_when_BufferIsNull() {
-  int res = SAUCE_Comment_write(NULL, 256, shortComment.comment);
+  int res = SAUCE_Comment_write(NULL, 256, shortComment);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
 }
 
 
 void should_FailToWriteToBuffer_when_CommentIsNull() {
   int length = copy_file_into_buffer(SAUCE_TESTFILE1_PATH, buffer);
-  if (length <= 0) {
-    TEST_FAIL_MESSAGE("Failed to copy TestFile1.ans to the buffer");
+  if (length < 0) {
+    TEST_FAIL_MESSAGE("Failed to copy CommentButNoRecord.ans to the buffer");
     return;
   }
 
-  shortComment.comment = NULL;
   int res = SAUCE_Comment_write(buffer, length, NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
 
-  // assert that the buffer has not changed
+  // assert that the buffer didn't change
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_TESTFILE1_PATH));
 }
+
 
 
 void should_FailToWriteToBuffer_when_BufferContainsCommentButNoRecord() {
@@ -292,7 +282,7 @@ void should_FailToWriteToBuffer_when_BufferContainsCommentButNoRecord() {
     return;
   }
 
-  int res = SAUCE_Comment_write(buffer, length, shortComment.comment);
+  int res = SAUCE_Comment_write(buffer, length, shortComment);
   TEST_ASSERT_EQUAL(SAUCE_ERMISS, res);
   
   // assert that the buffer hasn't changed

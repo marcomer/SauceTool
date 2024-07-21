@@ -141,7 +141,7 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
   // check for short file
   if (total < SAUCE_RECORD_SIZE) {
     record[0] = curr[total-1];
-    return SAUCE_ERMISS;
+    return SAUCE_ESHORT;
   }
 
   // copy record into buffer
@@ -422,16 +422,103 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce) {
 
 
 /**
- * @brief From a file, read `nLines` of a SAUCE CommentBlock into `block`.
+ * @brief From a file, read at most `nLines` of a SAUCE CommentBlock into `comment`.
+ *        A null character will be appended onto `comment` as well.
+ * 
+ * 
+ *        If the file does not contain a comment or the actual number of lines is less
+ *        than `nLines`, then expect 0 lines or all lines to be read, respectively.
  * 
  * @param filepath a path to a file 
- * @param block a SAUCE_CommentBlock to be filled with the comment
+ * @param comment a buffer of at least size `SAUCE_COMMENT_STRING_LENGTH(nLines) + 1` that will contain the comment
  * @param nLines the number of lines to read
- * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
+ * @return On success, the number of lines read. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines) {
-  return -1;
+int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
+  if (filepath == NULL) {
+    SAUCE_set_error("Filepath was NULL");
+    return SAUCE_ENULL;
+  }
+  if (comment == NULL) {
+    SAUCE_set_error("Comment string argument was NULL");
+    return SAUCE_ENULL;
+  }
+
+  //TODO: add note to documentation that you must allocate the comment string yourself
+
+  // open the file
+  FILE* file = fopen(filepath, "rb");
+  if (file == NULL) {
+    SAUCE_set_error("Could not open %s for reading", filepath);
+    return SAUCE_EFOPEN;
+  }
+
+  // get the record
+  char record[SAUCE_RECORD_SIZE + 1];
+  uint32_t filesize = 0;
+  int res = SAUCE_file_find_record(file, record, &filesize);
+  if (res < 0) {
+    fclose(file);
+    switch (res) {
+      case SAUCE_ERMISS:
+        SAUCE_set_error("%s does not contain a record", filepath);
+        break;
+      case SAUCE_EEMPTY:
+        SAUCE_set_error("%s is an empty file and cannot contain a record", filepath);
+        break;
+      case SAUCE_ESHORT:
+        SAUCE_set_error("%s is too short to contain a record", filepath);
+        break;
+      default:
+        break;
+    }
+    return res;
+  }
+
+  uint8_t record_start = 1;
+  if (memcmp(record, "SAUCE", 5) == 0) record_start = 0;
+
+  uint8_t totalLines = ((SAUCE*)(&record[record_start]))->Comments;
+  
+  // check if file's record has wrong num of comment lines
+  if (totalLines > 0 && filesize < SAUCE_TOTAL_SIZE(totalLines)) {
+    fclose(file);
+    SAUCE_set_error("Record claims that %s contains %u comment lines, but the file is too short to contain that many lines", filepath, (unsigned int)totalLines);
+  }
+
+  nLines = (totalLines > nLines) ? nLines : totalLines;
+
+  // check if no lines need to or can be read
+  if (nLines == 0) {
+    fclose(file);
+    return 0;
+  }
+
+  /*
+  // retrieve the comment
+  uint16_t commentLen = SAUCE_COMMENT_BLOCK_SIZE(totalLines) + 1;
+  char* comment = malloc(commentLen);
+
+  //TODO: consider adding total lines parameter to SAUCE_file_find_comment(), would make things quicker
+  res = SAUCE_file_find_comment(file, comment, filesize, totalLines);
+  fclose(file);
+  if (res == SAUCE_ECMISS) {
+    free(comment);
+    SAUCE_set_error("Record in %s indicated that %u comment lines could be read, but the comment id could not be found", filepath, nLines);
+    return SAUCE_ECMISS;
+  } else if (res < 0) {
+    free(comment);
+    return res;
+  }
+
+  // grab comment lines
+  char* comment_start = (memcmp(comment+1, "COMNT", 5) == 0) ? comment+1 : comment;
+  comment_start += 5;
+  memcpy(comment, comment_start, SAUCE_COMMENT_STRING_LENGTH(nLines));
+  block->lines = nLines;
+  */
+  return nLines;
 }
 
 
@@ -480,16 +567,21 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
 
 
 /**
- * @brief From the first `n` bytes of a buffer, read `nLines` of a SAUCE CommentBlock into `block`.
+ * @brief From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `comment`.
+ *        A null character will be appended onto `comment` as well.
+ * 
+ * 
+ *        If the buffer does not contain a comment or the actual number of lines is less than nLines, 
+ *        then expect 0 lines or all lines to be read, respectively.
  * 
  * @param buffer pointer to a buffer
  * @param n the length of the buffer
- * @param block a SAUCE_CommentBlock to be filled with the comment
+ * @param comment a buffer of at least size `SAUCE_COMMENT_STRING_LENGTH(nLines) + 1` that will contain the comment
  * @param nLines the number of lines to read
- * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
+ * @return On success, the number of lines read. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines) {
+int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nLines) {
   return -1;
 }
 
@@ -875,18 +967,18 @@ int SAUCE_equal(const SAUCE* first, const SAUCE* second) {
 
 
 /**
- * @brief Check two SAUCE_CommentBlocks for equality. SAUCE_CommentBlocks are equal
- *        if the content of each field match between the CommentBlocks.
+ * @brief Determine if two SAUCE comments are equal. 
  * 
- * @param first the first SAUCE struct
- * @param second the second SAUCE struct
- * @return 1 (true) if the CommentBlocks are equal; 0 (false) if the CommentBlocks are not equal
+ * 
+ *        Both comments must be at least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long. 
+ *        Anything beyond the given number of lines, including any terminating null 
+ *        characters after the last line, will be not compared or read.
+ * 
+ * @param first the first comment
+ * @param second the second comment
+ * @param lines the maximum number of lines to compare
+ * @return 1 (i.e. true) if the comments are equal; 0 (i.e. false) if the comments are not equal
  */
-int SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second) {
-  if (first == second) return 1;
-
-  if (memcmp(first->ID, second->ID, 5) != 0) return 0;
-  if (first->lines != second->lines) return 0;
-
-  return strncmp(first->comment, second->comment, first->lines * SAUCE_COMMENT_LINE_LENGTH) == 0;
+int SAUCE_Comment_equal(const char* first_comment, const char* second_comment, uint8_t lines) {
+  return 0; 
 }

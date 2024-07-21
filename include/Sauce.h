@@ -32,18 +32,6 @@ typedef struct SAUCE {
 
 
 
-/**
- * @brief Struct containing a SAUCE Comment Block and additional information on the length of the comment.
- * 
- */
-typedef struct SAUCE_CommentBlock {
-  char      ID[5];        // SAUCE comment block indentification. This should be equal to "COMNT".
-  uint8_t   lines;        // The number of comment lines present
-  char*     comment;      // A null-terminated comment string containing appended lines from the SAUCE comment block 
-} SAUCE_CommentBlock;
-
-
-
 
 // Constants and Helpful Macros
 
@@ -239,19 +227,20 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce);
 
 
 /**
- * @brief From a file, read at most `nLines` of a SAUCE CommentBlock into `block`.
+ * @brief From a file, read at most `nLines` of a SAUCE CommentBlock into `comment`.
+ *        A null character will be appended onto `comment` as well.
  * 
  * 
  *        If the file does not contain a comment or the actual number of lines is less
  *        than `nLines`, then expect 0 lines or all lines to be read, respectively.
  * 
  * @param filepath a path to a file 
- * @param block a SAUCE_CommentBlock to be filled with the comment
+ * @param comment a buffer of at least size `SAUCE_COMMENT_STRING_LENGTH(nLines) + 1` that will contain the comment
  * @param nLines the number of lines to read
  * @return On success, the number of lines read. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines);
+int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines);
 
 
 /**
@@ -267,7 +256,8 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce);
 
 
 /**
- * @brief From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `block`.
+ * @brief From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `comment`.
+ *        A null character will be appended onto `comment` as well.
  * 
  * 
  *        If the buffer does not contain a comment or the actual number of lines is less than nLines, 
@@ -275,12 +265,12 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce);
  * 
  * @param buffer pointer to a buffer
  * @param n the length of the buffer
- * @param block a SAUCE_CommentBlock to be filled with the comment
+ * @param comment a buffer of at least size `SAUCE_COMMENT_STRING_LENGTH(nLines) + 1` that will contain the comment
  * @param nLines the number of lines to read
  * @return On success, the number of lines read. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines);
+int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nLines);
 
 
 
@@ -453,14 +443,19 @@ int SAUCE_equal(const SAUCE* first, const SAUCE* second);
 
 
 /**
- * @brief Determine if two SAUCE_CommentBlocks are equal. SAUCE_CommentBlocks are equal
- *        if the content of each field match between the CommentBlocks.
+ * @brief Determine if two SAUCE comments are equal. 
  * 
- * @param first the first SAUCE struct
- * @param second the second SAUCE struct
- * @return 1 (i.e. true) if the CommentBlocks are equal; 0 (i.e. false) if the CommentBlocks are not equal
+ * 
+ *        Both comments must be at least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long. 
+ *        Anything beyond the given number of lines, including any terminating null 
+ *        characters after the last line, will be not compared or read.
+ * 
+ * @param first the first comment
+ * @param second the second comment
+ * @param lines the maximum number of lines to compare
+ * @return 1 (i.e. true) if the comments are equal; 0 (i.e. false) if the comments are not equal
  */
-int SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second);
+int SAUCE_Comment_equal(const char* first_comment, const char* second_comment, uint8_t lines);
 
 
 #endif //SAUCE_PARSE_HEADER_INCLUDED
