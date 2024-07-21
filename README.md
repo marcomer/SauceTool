@@ -153,24 +153,23 @@ The write functions can be used to **write** new SAUCE records/CommentBlocks or 
 - If the file already contains a SAUCE record, the record will be replaced.
 - An EOF character will be added if the file previously did not contain a SAUCE record.
 
-#### `SAUCE_Comment_fwrite(const char* filepath, const char* comment)`
+#### `SAUCE_Comment_fwrite(const char* filepath, const char* comment, uint8_t lines)`
 - Write a SAUCE CommentBlock to a file, replacing a CommentBlock if one already exists.
-- `comment` must be null-terminated.
-- The "Comments" field of the file's SAUCE record will be updated to the new number of comment lines.
-- **NOTE**: The null character of the comment string is not included in the written SAUCE CommentBlock. The comment's last line will be padded with spaces if the comment can't fill the entire line.
+- `lines` is the number of lines to be written. `comment` must be at least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long.
+- The "Comments" field of the file's SAUCE record will be updated to `lines`.
 
 #### `SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce)`
 - Write a SAUCE record to a buffer.
 - If the last 128 bytes of the buffer (bytes `n-1` to `n-128`) contain a SAUCE record, the buffer's SAUCE record will be replaced. Otherwise, the EOF character and the new SAUCE record will be appended to the buffer at index `n`.
 - **Important**: To prevent a buffer overflow error when appending a new record, the buffer's actual size must be at least `n` + 129 bytes (the size of a SAUCE record including an EOF character).
 
-#### `SAUCE_Comment_write(const char* buffer, uint32_t n, const char* comment)`
+#### `SAUCE_Comment_write(const char* buffer, uint32_t n, const char* comment, uint8_t lines)`
 - Write a SAUCE CommentBlock to a buffer, replacing a CommentBlock if one already exists.
-- `comment` must be null-terminated.
+- `lines` is the number of lines to be written. `comment` must be at least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long.
+- The "Comments" field of the file's SAUCE record will be updated to `lines`.
 - If the last 128 bytes of the buffer (bytes `n-1` to `n-128`) contain a SAUCE record, the CommentBlock will be written. Otherwise, an error will be returned.
 - The "Comments" field of the buffer's SAUCE record will be updated to the new number of comment lines.
 - **Important**: To prevent a buffer overflow error when writing a new comment, the buffer's actual size must be at least `n` + `SAUCE_COMMENT_BLOCK_SIZE(number of comment lines)`.
-- **NOTE**: The null character of the comment string is not included in the written SAUCE CommentBlock. The comment's last line will be padded with spaces if the comment can't fill the entire line.
 
 
 ### Return Values

@@ -788,15 +788,16 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
 
 /**
  * @brief Write a SAUCE CommentBlock to a file, replacing a CommentBlock if one already exists.
- *        The "Comments" field of the file's SAUCE record will be updated to the new number of comment
- *        lines.
+ *        The "Comments" field of the file's SAUCE record will be updated to `lines`.
+ *        
  * 
  * @param filepath a path to a file
- * @param comment a null-terminated comment string
+ * @param comment a comment buffer that is as least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long
+ * @param lines the number of lines to write
  * @return 0 on success. On error, a negative error code is returned. Use `SAUCE_get_error()`
  *         to get more info on the error.
  */
-int SAUCE_Comment_fwrite(const char* filepath, const char* comment) {
+int SAUCE_Comment_fwrite(const char* filepath, const char* comment, uint8_t lines) {
   return -1;
 }
 
@@ -881,22 +882,23 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
 
 /**
  * @brief Write a SAUCE CommentBlock to a buffer, replacing a CommentBlock if one already exists.
+ *        The "Comments" field of the buffer's SAUCE record will be updated to `lines`.
  * 
  * 
  *        If the last 128 bytes of the buffer (bytes `n-1` to `n-128`)
  *        contain a SAUCE record, the CommentBlock will be written. Otherwise, an
- *        error will be returned. The "Comments" field of the buffer's SAUCE record
- *        will be updated to the new number of comment lines.
+ *        error will be returned. 
  *        Important! - To prevent a buffer overflow error when writing a new comment, 
  *        the buffer's actual size must be at least `n` + `SAUCE_COMMENT_BLOCK_SIZE(number of comment lines)`.
  * 
  * @param buffer pointer to buffer
  * @param n the length of the buffer
- * @param comment a null-terminated comment string
+ * @param comment a comment buffer that is as least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long
+ * @param lines the number of lines to write
  * @return On success, the new length of the buffer is returned. On error, a negative error code
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
-int SAUCE_Comment_write(const char* buffer, uint32_t n, const char* comment) {
+int SAUCE_Comment_write(const char* buffer, uint32_t n, const char* comment, uint8_t lines) {
   return -1;
 }
 
