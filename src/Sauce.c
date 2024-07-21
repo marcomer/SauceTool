@@ -18,6 +18,11 @@ SAUCE_STATIC_ASSERT(sizeof(SAUCE) == 128, sizeof_SAUCE_struct_must_be_128_bytes)
 // The SAUCE error message
 static char* error_msg = NULL;
 
+// Set the current error message using the `printf()` family formatting scheme.
+// Will return SAUCE_EOTHER from the calling function if SAUCE_set_error() fails.
+// Note that parameters must be ordered exactly as if you were calling SAUCE_set_error().
+#define SAUCE_SET_ERROR(...)     if (SAUCE_set_error(__VA_ARGS__) < 0) return SAUCE_EOTHER;
+
 
 /**
  * @brief Set the current error message using the `printf()` family formatting scheme.
@@ -133,7 +138,7 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
       if (feof(file)) {
         break;
       }
-      SAUCE_set_error("Failed to read from file");
+      SAUCE_SET_ERROR("Failed to read from file");
       return SAUCE_EFFAIL;
     }
 
@@ -194,14 +199,14 @@ static int SAUCE_file_find_comment(FILE* file, char* comment, uint32_t filesize,
 
   // check if file is too short
   if (filesize < SAUCE_TOTAL_SIZE(totalLines)) {
-    SAUCE_set_error("File is too short to contain a comment with a total of %d lines", totalLines);
+    SAUCE_SET_ERROR("File is too short to contain a comment with a total of %d lines", totalLines);
     return SAUCE_ESHORT;
   }
 
   // seek to byte before comment, if possible
   if (filesize > SAUCE_TOTAL_SIZE(totalLines) + 1) {
     if (fseek(file, filesize - SAUCE_TOTAL_SIZE(totalLines) - 1, SEEK_SET) < 0) {
-      SAUCE_set_error("Failed to seek to byte before comment in file");
+      SAUCE_SET_ERROR("Failed to seek to byte before comment in file");
       return SAUCE_EFFAIL;
     }
   }
@@ -232,7 +237,7 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
 
   FILE* file = fopen(filepath, "ab");
   if (file == NULL) {
-    SAUCE_set_error("Failed to open %s for appending", filepath);
+    SAUCE_SET_ERROR("Failed to open %s for appending", filepath);
     return SAUCE_EFOPEN;
   }
 
@@ -241,7 +246,7 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
   write = fwrite(&eofchar, 1, 1, file);
   if (write != 1) {
     fclose(file);
-    SAUCE_set_error("Failed to append an EOF character to %s", filepath);
+    SAUCE_SET_ERROR("Failed to append an EOF character to %s", filepath);
     return SAUCE_EFFAIL;
   }
 
@@ -254,7 +259,7 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
   write = fwrite(record, 1, SAUCE_RECORD_SIZE, file);
   fclose(file);
   if (write != SAUCE_RECORD_SIZE) {
-    SAUCE_set_error("Failed to append record to %s", filepath);
+    SAUCE_SET_ERROR("Failed to append record to %s", filepath);
     return SAUCE_EFFAIL;
   }
 
@@ -386,18 +391,18 @@ uint8_t SAUCE_num_lines(const char* string) {
 int SAUCE_fread(const char* filepath, SAUCE* sauce) {
   // null checks
   if (filepath == NULL) {
-    SAUCE_set_error("Filepath was NULL");
+    SAUCE_SET_ERROR("Filepath was NULL");
     return SAUCE_ENULL;
   }
   if (sauce == NULL) {
-    SAUCE_set_error("SAUCE struct was NULL");
+    SAUCE_SET_ERROR("SAUCE struct was NULL");
     return SAUCE_ENULL;
   }
 
   // open file
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
-    SAUCE_set_error("Could not open %s", filepath);
+    SAUCE_SET_ERROR("Could not open %s", filepath);
     return SAUCE_EFOPEN;
   }
 
@@ -407,13 +412,13 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce) {
   int res = SAUCE_file_find_record(file, record, &filesize);
   fclose(file);
   if (res == SAUCE_EEMPTY) {
-    SAUCE_set_error("%s is empty and cannot contain a record", filepath);
+    SAUCE_SET_ERROR("%s is empty and cannot contain a record", filepath);
     return SAUCE_EEMPTY;
   } else if (filesize < SAUCE_RECORD_SIZE) {
-    SAUCE_set_error("%s is too short to contain a record", filepath);
+    SAUCE_SET_ERROR("%s is too short to contain a record", filepath);
     return SAUCE_ESHORT;
   } else if (res == SAUCE_ERMISS) {
-    SAUCE_set_error("%s does not contain a record", filepath);
+    SAUCE_SET_ERROR("%s does not contain a record", filepath);
     return SAUCE_ERMISS;
   } else if (res < 0) {
     return res;
@@ -446,18 +451,18 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce) {
  */
 int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   if (filepath == NULL) {
-    SAUCE_set_error("Filepath was NULL");
+    SAUCE_SET_ERROR("Filepath was NULL");
     return SAUCE_ENULL;
   }
   if (comment == NULL) {
-    SAUCE_set_error("Comment string argument was NULL");
+    SAUCE_SET_ERROR("Comment string argument was NULL");
     return SAUCE_ENULL;
   }
 
   // open the file
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
-    SAUCE_set_error("Could not open %s for reading", filepath);
+    SAUCE_SET_ERROR("Could not open %s for reading", filepath);
     return SAUCE_EFOPEN;
   }
 
@@ -469,13 +474,13 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
     fclose(file);
     switch (res) {
       case SAUCE_ERMISS:
-        SAUCE_set_error("%s does not contain a record", filepath);
+        SAUCE_SET_ERROR("%s does not contain a record", filepath);
         break;
       case SAUCE_EEMPTY:
-        SAUCE_set_error("%s is an empty file and cannot contain a record", filepath);
+        SAUCE_SET_ERROR("%s is an empty file and cannot contain a record", filepath);
         break;
       case SAUCE_ESHORT:
-        SAUCE_set_error("%s is too short to contain a record", filepath);
+        SAUCE_SET_ERROR("%s is too short to contain a record", filepath);
         break;
       default:
         break;
@@ -492,7 +497,7 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   uint8_t totalLines = ((SAUCE*)(&record[record_start]))->Comments;
   if (totalLines > 0 && filesize < SAUCE_TOTAL_SIZE(totalLines)) {
     fclose(file);
-    SAUCE_set_error("Record claims that %s contains %u comment lines, but the file is too short to contain that many lines", filepath, (unsigned int)totalLines);
+    SAUCE_SET_ERROR("Record claims that %s contains %u comment lines, but the file is too short to contain that many lines", filepath, (unsigned int)totalLines);
     return SAUCE_ESHORT;
   }
 
@@ -514,7 +519,7 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   fclose(file);
   if (res == SAUCE_ECMISS) {
     free(commentBuffer);
-    SAUCE_set_error("Record in %s indicated that %u total comment lines could be read, but the comment id could not be found", filepath, totalLines);
+    SAUCE_SET_ERROR("Record in %s indicated that %u total comment lines could be read, but the comment id could not be found", filepath, totalLines);
     return SAUCE_ECMISS;
   } else if (res < 0) {
     free(commentBuffer);
@@ -544,28 +549,28 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
 int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
   // null checks
   if (buffer == NULL) {
-    SAUCE_set_error("Buffer was NULL");
+    SAUCE_SET_ERROR("Buffer was NULL");
     return SAUCE_ENULL;
   }
   if (sauce == NULL) {
-    SAUCE_set_error("SAUCE struct was NULL");
+    SAUCE_SET_ERROR("SAUCE struct was NULL");
     return SAUCE_ENULL;
   }
 
   if (n == 0) {
-    SAUCE_set_error("The buffer has a length of 0 and cannot contain a record");
+    SAUCE_SET_ERROR("The buffer has a length of 0 and cannot contain a record");
     return SAUCE_EEMPTY;
   }
 
   if (n < SAUCE_RECORD_SIZE) {
-    SAUCE_set_error("The buffer length of %u is too short to contain a record", n);
+    SAUCE_SET_ERROR("The buffer length of %u is too short to contain a record", n);
     return SAUCE_ESHORT;
   }
 
 
   // find the SAUCE id
   if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) {
-    SAUCE_set_error("Could not find the SAUCE id in the buffer");
+    SAUCE_SET_ERROR("Could not find the SAUCE id in the buffer");
     return SAUCE_ERMISS;
   }
 
@@ -593,32 +598,32 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
  */
 int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nLines) {
   if (buffer == NULL) {
-    SAUCE_set_error("Buffer was null");
+    SAUCE_SET_ERROR("Buffer was null");
     return SAUCE_ENULL;
   }
   if (comment == NULL) {
-    SAUCE_set_error("Comment string argment was null");
+    SAUCE_SET_ERROR("Comment string argment was null");
     return SAUCE_ENULL;
   }
   if (n == 0) {
-    SAUCE_set_error("Buffer's length is 0, so nothing can be read");
+    SAUCE_SET_ERROR("Buffer's length is 0, so nothing can be read");
     return SAUCE_EEMPTY;
   }
   if (n < SAUCE_RECORD_SIZE) {
-    SAUCE_set_error("Buffer's length is too short to contain a record");
+    SAUCE_SET_ERROR("Buffer's length is too short to contain a record");
     return SAUCE_ESHORT;
   }
 
   // find the SAUCE id
   if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) {
-    SAUCE_set_error("Could not find the SAUCE id in the buffer");
+    SAUCE_SET_ERROR("Could not find the SAUCE id in the buffer");
     return SAUCE_ERMISS;
   }
 
   // get total lines from record
   uint8_t totalLines = ((SAUCE*)(&buffer[n - SAUCE_RECORD_SIZE]))->Comments;
   if (totalLines > 0 && n < SAUCE_TOTAL_SIZE(totalLines)) {
-    SAUCE_set_error("Record claims that buffer contains %u comment lines, but the buffer is too short to contain that many lines", totalLines);
+    SAUCE_SET_ERROR("Record claims that buffer contains %u comment lines, but the buffer is too short to contain that many lines", totalLines);
     return SAUCE_ESHORT;
   }
 
@@ -633,7 +638,7 @@ int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nL
 
   // check for COMNT id
   if (memcmp(&buffer[n-SAUCE_TOTAL_SIZE(totalLines)], "COMNT", 5) != 0) {
-    SAUCE_set_error("Record in buffer indicated that %u total comment lines could be read, but the comment id could not be found", totalLines);
+    SAUCE_SET_ERROR("Record in buffer indicated that %u total comment lines could be read, but the comment id could not be found", totalLines);
     return SAUCE_ECMISS;
   }
 
@@ -661,18 +666,18 @@ int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nL
 int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   // null checks
   if (filepath == NULL) {
-    SAUCE_set_error("Filepath was NULL");
+    SAUCE_SET_ERROR("Filepath was NULL");
     return SAUCE_ENULL;
   }
   if (sauce == NULL) {
-    SAUCE_set_error("SAUCE struct was NULL");
+    SAUCE_SET_ERROR("SAUCE struct was NULL");
     return SAUCE_ENULL;
   }
 
   // open file for reading
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
-    SAUCE_set_error("Failed to open %s", filepath);
+    SAUCE_SET_ERROR("Failed to open %s", filepath);
     return SAUCE_EFOPEN;
   }
 
@@ -682,7 +687,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   int res = SAUCE_file_find_record(file, record, &filesize);
   if (res == SAUCE_EFFAIL) {
     fclose(file);
-    SAUCE_set_error("Failed to read record from %s", filepath);
+    SAUCE_SET_ERROR("Failed to read record from %s", filepath);
     return SAUCE_EFFAIL;
   }
 
@@ -711,7 +716,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
       fclose(file);
       free(buffer);
       free(comment);
-      SAUCE_set_error("Record in %s indicated that %d comment lines existed, but the comment id could not be found", filepath, lines);
+      SAUCE_SET_ERROR("Record in %s indicated that %d comment lines existed, but the comment id could not be found", filepath, lines);
       return SAUCE_ECMISS;
     } else if (res < 0) {
       fclose(file);
@@ -747,7 +752,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   file = fopen(filepath, "rb+");
   if (file == NULL) {
     free(buffer);
-    SAUCE_set_error("Failed to open %s for reading & writing", filepath);
+    SAUCE_SET_ERROR("Failed to open %s for reading & writing", filepath);
     return SAUCE_EFOPEN;
   }
 
@@ -756,14 +761,14 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
     if (fseek(file, filesize - bufLen, SEEK_SET) < 0) { // seek to eof char
       fclose(file);
       free(buffer);
-      SAUCE_set_error("Failed to seek to eof character in %s", filepath);
+      SAUCE_SET_ERROR("Failed to seek to eof character in %s", filepath);
       return SAUCE_EFFAIL;
     }
   } else {
     if (fseek(file, filesize - bufLen + 1, SEEK_SET) < 0) { // seek start of comment/record
       fclose(file);
       free(buffer);
-      SAUCE_set_error("Failed to seek to start of SAUCE data in %s", filepath);
+      SAUCE_SET_ERROR("Failed to seek to start of SAUCE data in %s", filepath);
       return SAUCE_EFFAIL;
     }
   }
@@ -773,7 +778,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   fclose(file);
   free(buffer);
   if (write != bufLen) {
-    SAUCE_set_error("Failed to write to %s", filepath);
+    SAUCE_SET_ERROR("Failed to write to %s", filepath);
     return SAUCE_EFFAIL;
   }
 
@@ -815,11 +820,11 @@ int SAUCE_Comment_fwrite(const char* filepath, const char* comment) {
 int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
   // null checks
   if (buffer == NULL) {
-    SAUCE_set_error("Buffer was NULL");
+    SAUCE_SET_ERROR("Buffer was NULL");
     return SAUCE_ENULL;
   }
   if (sauce == NULL) {
-    SAUCE_set_error("SAUCE struct was NULL");
+    SAUCE_SET_ERROR("SAUCE struct was NULL");
     return SAUCE_ENULL;
   }
 
