@@ -493,7 +493,8 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
 
   // check if no lines need to or can be read
   if (nLines == 0) {
-    fclose(file); //TODO: set the first character in comment to a null character
+    fclose(file);
+    comment[0] = 0;
     return 0;
   }
 
