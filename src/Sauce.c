@@ -485,6 +485,7 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   if (totalLines > 0 && filesize < SAUCE_TOTAL_SIZE(totalLines)) {
     fclose(file);
     SAUCE_set_error("Record claims that %s contains %u comment lines, but the file is too short to contain that many lines", filepath, (unsigned int)totalLines);
+    return SAUCE_ESHORT;
   }
 
   // determine num of lines to read
@@ -492,7 +493,7 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
 
   // check if no lines need to or can be read
   if (nLines == 0) {
-    fclose(file);
+    fclose(file); //TODO: set the first character in comment to a null character
     return 0;
   }
 
@@ -582,7 +583,55 @@ int SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce) {
  *         to get more info on the error.
  */
 int SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nLines) {
-  return -1;
+  if (buffer == NULL) {
+    SAUCE_set_error("Buffer was null");
+    return SAUCE_ENULL;
+  }
+  if (comment == NULL) {
+    SAUCE_set_error("Comment string argment was null");
+    return SAUCE_ENULL;
+  }
+  if (n == 0) {
+    SAUCE_set_error("Buffer's length is 0, so nothing can be read");
+    return SAUCE_EEMPTY;
+  }
+  if (n < SAUCE_RECORD_SIZE) {
+    SAUCE_set_error("Buffer's length is too short to contain a record");
+    return SAUCE_ESHORT;
+  }
+
+  // find the SAUCE id
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], "SAUCE", 5) != 0) {
+    SAUCE_set_error("Could not find the SAUCE id in the buffer");
+    return SAUCE_ERMISS;
+  }
+
+  // get total lines from record
+  uint8_t totalLines = ((SAUCE*)(&buffer[n - SAUCE_RECORD_SIZE]))->Comments;
+  if (totalLines > 0 && n < SAUCE_TOTAL_SIZE(totalLines)) {
+    SAUCE_set_error("Record claims that buffer contains %u comment lines, but the buffer is too short to contain that many lines", totalLines);
+    return SAUCE_ESHORT;
+  }
+
+  // determine num of lines to read
+  nLines = (totalLines > nLines) ? nLines : totalLines;
+
+  // check if no lines need to or can be read
+  if (nLines == 0) {
+    comment[0] = 0; // add null character
+    return 0;
+  }
+
+  // check for COMNT id
+  if (memcmp(&buffer[n-SAUCE_TOTAL_SIZE(totalLines)], "COMNT", 5) != 0) {
+    SAUCE_set_error("Record in buffer indicated that %u total comment lines could be read, but the comment id could not be found", totalLines);
+    return SAUCE_ECMISS;
+  }
+
+  // retrieve the comment
+  memcpy(comment, &buffer[n-SAUCE_TOTAL_SIZE(totalLines)+5], SAUCE_COMMENT_STRING_LENGTH(nLines));
+  comment[SAUCE_COMMENT_STRING_LENGTH(nLines)] = 0;
+  return nLines;
 }
 
 
