@@ -177,7 +177,7 @@ enum SAUCE_FileType {
 #define SAUCE_ENULL     -5    // A given pointer was NULL
 #define SAUCE_EFFAIL    -6    // A file operation failed
 #define SAUCE_EEMPTY    -7    // The file was empty
-
+#define SAUCE_EOTHER    -8    // An error occurred, please call SAUCE_get_error() for latest error message
 
 
 // Helper Functions

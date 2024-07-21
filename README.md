@@ -319,3 +319,4 @@ Most functions will return an error code if an error occurs. Remember that you c
 - `SAUCE_ENULL` - A given pointer was NULL
 - `SAUCE_EFFAIL` - A file operation failed
 - `SAUCE_EEMPTY` - The given file/buffer was empty
+- `SAUCE_EOTHER` - An error occurred, please call SAUCE_get_error() for latest error message
