@@ -176,22 +176,23 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
  * @param file FILE pointer
  * @param comment comment buffer to be filled; length must be at least `SAUCE_COMMENT_BLOCK_SIZE(lines) + 1`
  * @param filesize the size/length of the file
- * @param lines the number of comment lines from the file's record
+ * @param totalLines the total number of lines reported by the record
+ * @param lines the number of comment lines to read from the file
  * @return 0 on success. If the comment ID couldn't be found, then SAUCE_ECMISS will be returned.
  *         Any other returned errors indicate that the file could not be read or could not possibly contain a comment.
  */
-static int SAUCE_file_find_comment(FILE* file, char* comment, uint32_t filesize, uint8_t lines) {
+static int SAUCE_file_find_comment(FILE* file, char* comment, uint32_t filesize, uint8_t totalLines, uint8_t lines) {
   rewind(file);
 
   // check if file is too short
-  if (filesize < SAUCE_TOTAL_SIZE(lines)) {
-    SAUCE_set_error("File is too short to contain a comment with %d lines", lines);
+  if (filesize < SAUCE_TOTAL_SIZE(totalLines)) {
+    SAUCE_set_error("File is too short to contain a comment with a total of %d lines", totalLines);
     return SAUCE_ESHORT;
   }
 
   // seek to byte before comment, if possible
-  if (filesize > SAUCE_TOTAL_SIZE(lines) + 1) {
-    if (fseek(file, filesize - SAUCE_TOTAL_SIZE(lines) - 1, SEEK_SET) < 0) {
+  if (filesize > SAUCE_TOTAL_SIZE(totalLines) + 1) {
+    if (fseek(file, filesize - SAUCE_TOTAL_SIZE(totalLines) - 1, SEEK_SET) < 0) {
       SAUCE_set_error("Failed to seek to byte before comment in file");
       return SAUCE_EFFAIL;
     }
@@ -200,7 +201,7 @@ static int SAUCE_file_find_comment(FILE* file, char* comment, uint32_t filesize,
   // read comment and possibly the byte immediately before
   int read = fread(comment, 1, SAUCE_COMMENT_BLOCK_SIZE(lines) + 1, file);
   
-  // check for comment id
+  // check for comment id, return if found
   if (memcmp(((filesize == SAUCE_TOTAL_SIZE(lines)) ? comment : comment+1), "COMNT", 5) == 0) {
     return 0;
   }
@@ -498,15 +499,14 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   }
 
   // retrieve the comment
-  uint16_t commentLen = SAUCE_COMMENT_BLOCK_SIZE(totalLines) + 1;
+  uint16_t commentLen = SAUCE_COMMENT_BLOCK_SIZE(nLines) + 1;
   char* commentBuffer = malloc(commentLen);
 
-  //TODO: consider adding total lines parameter to SAUCE_file_find_comment(), would make things quicker
-  res = SAUCE_file_find_comment(file, commentBuffer, filesize, totalLines);
+  res = SAUCE_file_find_comment(file, commentBuffer, filesize, totalLines, nLines);
   fclose(file);
   if (res == SAUCE_ECMISS) {
     free(commentBuffer);
-    SAUCE_set_error("Record in %s indicated that %u comment lines could be read, but the comment id could not be found", filepath, nLines);
+    SAUCE_set_error("Record in %s indicated that %u total comment lines could be read, but the comment id could not be found", filepath, totalLines);
     return SAUCE_ECMISS;
   } else if (res < 0) {
     free(commentBuffer);
@@ -650,7 +650,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   if (lines > 0) {
     // record claims there is a comment, retrieve it
     char* comment = malloc(SAUCE_COMMENT_BLOCK_SIZE(lines) + 1);
-    res = SAUCE_file_find_comment(file, comment, filesize, lines);
+    res = SAUCE_file_find_comment(file, comment, filesize, lines, lines);
     if (res == SAUCE_ECMISS) {
       fclose(file);
       free(buffer);
