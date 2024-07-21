@@ -476,17 +476,19 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
     return res;
   }
 
+  // get start of record
   uint8_t record_start = 1;
   if (memcmp(record, "SAUCE", 5) == 0) record_start = 0;
 
-  uint8_t totalLines = ((SAUCE*)(&record[record_start]))->Comments;
   
   // check if file's record has wrong num of comment lines
+  uint8_t totalLines = ((SAUCE*)(&record[record_start]))->Comments;
   if (totalLines > 0 && filesize < SAUCE_TOTAL_SIZE(totalLines)) {
     fclose(file);
     SAUCE_set_error("Record claims that %s contains %u comment lines, but the file is too short to contain that many lines", filepath, (unsigned int)totalLines);
   }
 
+  // determine num of lines to read
   nLines = (totalLines > nLines) ? nLines : totalLines;
 
   // check if no lines need to or can be read
@@ -495,29 +497,29 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
     return 0;
   }
 
-  /*
   // retrieve the comment
   uint16_t commentLen = SAUCE_COMMENT_BLOCK_SIZE(totalLines) + 1;
-  char* comment = malloc(commentLen);
+  char* commentBuffer = malloc(commentLen);
 
   //TODO: consider adding total lines parameter to SAUCE_file_find_comment(), would make things quicker
-  res = SAUCE_file_find_comment(file, comment, filesize, totalLines);
+  res = SAUCE_file_find_comment(file, commentBuffer, filesize, totalLines);
   fclose(file);
   if (res == SAUCE_ECMISS) {
-    free(comment);
+    free(commentBuffer);
     SAUCE_set_error("Record in %s indicated that %u comment lines could be read, but the comment id could not be found", filepath, nLines);
     return SAUCE_ECMISS;
   } else if (res < 0) {
-    free(comment);
+    free(commentBuffer);
     return res;
   }
 
   // grab comment lines
-  char* comment_start = (memcmp(comment+1, "COMNT", 5) == 0) ? comment+1 : comment;
-  comment_start += 5;
-  memcpy(comment, comment_start, SAUCE_COMMENT_STRING_LENGTH(nLines));
-  block->lines = nLines;
-  */
+  char* commentBuffer_start = (memcmp(commentBuffer+1, "COMNT", 5) == 0) ? commentBuffer+1 : commentBuffer;
+  commentBuffer_start += 5;
+  memcpy(comment, commentBuffer_start, SAUCE_COMMENT_STRING_LENGTH(nLines));
+  comment[SAUCE_COMMENT_STRING_LENGTH(nLines)] = 0;
+  
+  free(commentBuffer);
   return nLines;
 }
 
@@ -980,5 +982,5 @@ int SAUCE_equal(const SAUCE* first, const SAUCE* second) {
  * @return 1 (i.e. true) if the comments are equal; 0 (i.e. false) if the comments are not equal
  */
 int SAUCE_Comment_equal(const char* first_comment, const char* second_comment, uint8_t lines) {
-  return 0; 
+  return memcmp(first_comment, second_comment, SAUCE_COMMENT_STRING_LENGTH(lines)) == 0;
 }
