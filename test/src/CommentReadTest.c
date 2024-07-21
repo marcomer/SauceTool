@@ -15,8 +15,8 @@ void setUp() {
   // clear the buffer
   memset(buffer, 0, 1024);
 
-  // reset the comment buffer
-  memset(commentStr, 0, UINT8_MAX * SAUCE_COMMENT_LINE_LENGTH);
+  // reset the comment buffer to an arbitrary value, but not null characters
+  memset(commentStr, 'a', UINT8_MAX * SAUCE_COMMENT_LINE_LENGTH);
 }
 
 
@@ -35,6 +35,7 @@ void should_ReadComment_when_FileContainsComment() {
   TEST_ASSERT_EQUAL(2, res);
 
   TEST_ASSERT_TRUE(SAUCE_Comment_equal(commentStr, test_get_testfile1_expected_comment(), TESTFILE1_EXPECTED_LINES));
+  TEST_ASSERT_EQUAL(0, commentStr[SAUCE_COMMENT_STRING_LENGTH(2)]); // check for null char
 }
 
 
@@ -42,15 +43,17 @@ void should_ReadNothing_when_FileContainsNoComment() {
   // read TestFile2.ans, which has no comment but a record
   int res = SAUCE_Comment_fread(SAUCE_TESTFILE2_PATH, commentStr, 2);
   TEST_ASSERT_EQUAL(0, res);
+  TEST_ASSERT_EQUAL(0, commentStr[0]); // check for null char
 }
 
 
 void should_ReadFullCommentFromFile_when_MoreLinesRequestedThanAvailable() {
-  // read TestFile1.ans, but request 3 liens
+  // read TestFile1.ans, but request 3 lines
   int res = SAUCE_Comment_fread(SAUCE_TESTFILE1_PATH, commentStr, 3);
   TEST_ASSERT_EQUAL(2, res);
 
   TEST_ASSERT_TRUE(SAUCE_Comment_equal(commentStr, test_get_testfile1_expected_comment(), TESTFILE1_EXPECTED_LINES));
+  TEST_ASSERT_EQUAL(0, commentStr[SAUCE_COMMENT_STRING_LENGTH(2)]); // check for null char
 }
 
 
@@ -69,6 +72,7 @@ void should_ReadComment_when_BufferContainsComment() {
   TEST_ASSERT_EQUAL(2, res);
 
   TEST_ASSERT_TRUE(SAUCE_Comment_equal(commentStr, test_get_testfile1_expected_comment(), TESTFILE1_EXPECTED_LINES));
+  TEST_ASSERT_EQUAL(0, commentStr[SAUCE_COMMENT_STRING_LENGTH(2)]); // check for null char
 }
 
 
@@ -81,6 +85,7 @@ void should_ReadNothing_when_BufferContainsNoComment() {
 
   int res = SAUCE_Comment_read(buffer, length, commentStr, 2);
   TEST_ASSERT_EQUAL(0, res);
+  TEST_ASSERT_EQUAL(0, commentStr[0]); // check for null char
 }
 
 
@@ -95,6 +100,7 @@ void should_ReadFullCommentFromBuffer_when_MoreLinesRequestedThanAvailable() {
   TEST_ASSERT_EQUAL(2, res);
 
   TEST_ASSERT_TRUE(SAUCE_Comment_equal(commentStr, test_get_testfile1_expected_comment(), TESTFILE1_EXPECTED_LINES));
+  TEST_ASSERT_EQUAL(0, commentStr[SAUCE_COMMENT_STRING_LENGTH(2)]); // check for null char
 }
 
 
