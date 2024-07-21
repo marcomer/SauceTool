@@ -13,11 +13,11 @@
         - [CommentBlock Requirements](#commentblock-requirements)
     - [Limitations](#limitations)
 3. Usage
-    - [Data Structures](#data-structures)
     - [Reading](#reading)
     - [Writing](#writing)
     - [Removing](#removing)
     - [Performing Checks](#performing-checks)
+    - [SAUCE struct](#sauce-struct)
     - [Constants](#constants)
     - [Helper Functions](#helper-functions)
     - [Error Codes](#error-codes)
@@ -102,49 +102,8 @@ Checking or validating any of the SAUCE record fields which are marked as *not r
 
 Remember, unexpected behavior may occur if your file/buffer contains invalid, misplaced, or otherwise non-standard SAUCE records/comments.
 
-## Data Structures
-
-There are two data structures used to represent SAUCE records/comments. The `SAUCE` struct and the `SAUCE_CommentBlock` struct.
 
 
-### `SAUCE` struct
-A struct that represents a SAUCE record. For more information on each field, see the SAUCE Layout table in the [offical specification](https://www.acid.org/info/sauce/sauce.htm).
-
-```C
-  typedef struct SAUCE {
-    char          ID[5];
-    char          Version[2];
-    char          Title[35]; 
-    char          Author[20];
-    char          Group[20];
-    char          Date[8];
-    uint32_t      FileSize;
-    uint8_t       DataType;
-    uint8_t       FileType;
-    uint16_t      TInfo1;
-    uint16_t      TInfo2;
-    uint16_t      TInfo3;
-    uint16_t      TInfo4;
-    uint8_t       Comments;
-    uint8_t       TFlags;
-    char          TInfoS[22];
-  } SAUCE;
-```
-
-### `SAUCE_CommentBlock` struct
-A struct representing a SAUCE CommentBlock with additional information about the block.
-
-```C
-typedef struct SAUCE_CommentBlock {
-  char      ID[5];
-  uint8_t   lines;
-  char*     comment;
-} SAUCE_CommentBlock;
-```
-The field descriptions are:
-- **ID** - The ID of the CommentBlock, should be "COMNT".
-- **lines** - The number of comment lines present.
-- **comment** - A null-terminated string containing appended lines from the SAUCE comment block.
 
 
 ## Reading
@@ -158,16 +117,16 @@ Functions are provided to find and read SAUCE records and CommentBlocks from fil
 - From a file, read a SAUCE record into `sauce`.
 
 
-#### `SAUCE_Comment_fread(const char* filepath, SAUCE_CommentBlock* block, uint8_t nLines)`
-- From a file, read at most `nLines` of a SAUCE CommentBlock into `block`. If the file does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
+#### `SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines)`
+- From a file, read at most `nLines` of a SAUCE CommentBlock into `comment`. A null character will be appended onto `comment` as well. If the file does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
 
 
 #### `SAUCE_read(const char* buffer, uint32_t n, SAUCE* sauce)`
 - From the first `n` bytes of a buffer, read a SAUCE record into `sauce`.
 
 
-#### `SAUCE_Comment_read(const char* buffer, uint32_t n, SAUCE_CommentBlock* block, uint8_t nLines)`
-- From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `block`. If the buffer does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
+#### `SAUCE_Comment_read(const char* buffer, uint32_t n, char* comment, uint8_t nLines)`
+- From the first `n` bytes of a buffer, read at most `nLines` of a SAUCE CommentBlock into `comment`. A null character will be appended onto `comment` as well. If the buffer does not contain a comment or the actual number of lines is less than `nLines`, then expect 0 lines or all lines to be read, respectively.
 
 
 ### Return Values
@@ -271,9 +230,8 @@ On success, all **buffer** remove functions will return the new length of the bu
 - Determine if two SAUCE records are equal.
 - SAUCE records are equal if each field between the SAUCE records match.
 
-#### `SAUCE_Comment_equal(const SAUCE_CommentBlock* first, const SAUCE_CommentBlock* second)`
-- Determine if two SAUCE_CommentBlocks are equal.
-- SAUCE_CommentBlocks are equal if the content of each field match between the CommentBlocks.
+#### `SAUCE_Comment_equal(const char* first_comment, const char* second_comment, uint8_t lines)`
+- Determine if two SAUCE comments are equal. Both comments must be at least `SAUCE_COMMENT_STRING_LENGTH(lines)` bytes long. Anything beyond the given number of `lines`, including any terminating null characters after the last line, will be not compared or read.
 
 ### Return Values
 
@@ -281,6 +239,31 @@ On success, `SAUCE_check_file()` and `SAUCE_check_buffer()` will return 1 (i.e. 
 
 The `SAUCE_equal()` and `SAUCE_Comment_equal()` will return a boolean value: 1 for true, and 0 for false.
 
+
+
+## `SAUCE` struct
+A struct that represents a SAUCE record. For more information on each field, see the SAUCE Layout table in the [offical specification](https://www.acid.org/info/sauce/sauce.htm).
+
+```C
+  typedef struct SAUCE {
+    char          ID[5];
+    char          Version[2];
+    char          Title[35]; 
+    char          Author[20];
+    char          Group[20];
+    char          Date[8];
+    uint32_t      FileSize;
+    uint8_t       DataType;
+    uint8_t       FileType;
+    uint16_t      TInfo1;
+    uint16_t      TInfo2;
+    uint16_t      TInfo3;
+    uint16_t      TInfo4;
+    uint8_t       Comments;
+    uint8_t       TFlags;
+    char          TInfoS[22];
+  } SAUCE;
+```
 
 
 
@@ -331,4 +314,4 @@ Most functions will return an error code if an error occurs. Remember that you c
 - `SAUCE_ESHORT` - The given file/buffer was too short to contain a record
 - `SAUCE_ENULL` - A given pointer was NULL
 - `SAUCE_EFFAIL` - A file operation failed
-- `SAUCE_EEMPTY` - The file was empty
+- `SAUCE_EEMPTY` - The given file/buffer was empty
