@@ -631,7 +631,7 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   }
 
   // if record was not found, just append the new record
-  if (res == SAUCE_ERMISS || res == SAUCE_EEMPTY) {
+  if (res == SAUCE_ERMISS || res == SAUCE_EEMPTY || res == SAUCE_ESHORT) {
     fclose(file);
     return SAUCE_file_append_record(filepath, sauce);
   }
