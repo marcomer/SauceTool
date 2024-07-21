@@ -2,12 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <assert.h>
-#include "Sauce.h"
-
-// Local constants
-#define FILE_BUF_READ_SIZE      256   
-
+#include "Sauce.h" 
 
 // Static asserts
 #define SAUCE_STATIC_ASSERT(condition, message) \
@@ -17,6 +12,8 @@
 SAUCE_STATIC_ASSERT(sizeof(SAUCE) == 128, sizeof_SAUCE_struct_must_be_128_bytes);
 
 
+// Local constants
+#define FILE_BUF_READ_SIZE      256  
 
 // The SAUCE error message
 static char* error_msg = NULL;
@@ -27,8 +24,10 @@ static char* error_msg = NULL;
  * 
  * @param format format string
  * @param ... optional arguments to be formatted
+ * 
+ * @return 0 on success. Otherwise, a negative number is returned.
  */
-static void SAUCE_set_error(const char* format, ...) {
+static int SAUCE_set_error(const char* format, ...) {
   va_list ap;
 
   // free the error message
@@ -43,8 +42,8 @@ static void SAUCE_set_error(const char* format, ...) {
   va_end(ap);
   if (len < 0) {
     error_msg = malloc(128);
-    snprintf(error_msg, 128, "FATAL: vsnprintf failed to get the formatted error message length");
-    return;
+    snprintf(error_msg, 128, "SAUCE_set_error: vsnprintf failed to get the formatted error message length");
+    return -1;
   }
 
   // malloc and copy the formatted string
@@ -55,17 +54,17 @@ static void SAUCE_set_error(const char* format, ...) {
   if (res < 0) {
     free(error_msg);
     error_msg = malloc(128);
-    snprintf(error_msg, 128, "FATAL: vsnprintf failed to write the formatted error message to error_msg string");
-    return;
+    snprintf(error_msg, 128, "SAUCE_set_error: vsnprintf failed to write the formatted error message to error_msg string");
+    return -1;
   }
   if (len != res) {
     free(error_msg);
     error_msg = malloc(128);
-    snprintf(error_msg, 128, "FATAL: vsnprintf only wrote %d characters instead of expected %d characters", res, len);
-    return;
+    snprintf(error_msg, 128, "SAUCE_set_error: vsnprintf only wrote %d characters instead of expected %d characters", res, len);
+    return -1;
   }
 
-  return;
+  return 0;
 }
 
 
