@@ -50,12 +50,13 @@ See the Usage section in the [Table of Contents](#table-of-contents) for info on
 
 
 ## Assumptions To Keep In Mind
-1. SAUCE is made up of two data structures: (1) a SAUCE record, and (2) an *optional* SAUCE CommentBlock. This library operates on this core assumption. 
-2. A file/buffer contains correct SAUCE data **only if** the data adheres to the [requirements](#sauce-record-requirements) listed below.
-3. SAUCE CommentBlocks are *optional*. That means comment blocks **cannot** be read, written, replaced, or removed unless a corresponding SAUCE record also exists.
-4. Buffer functions require a buffer's length, which is often the parameter `n`. Note that `n` isn't the *actual* size of the allocated array, but the length of the file contents present in the buffer. All buffer functions will treat data from index `0` to `n-1` as the provided file contents. If you are attempting to read, replace, or remove a SAUCE record/comment block, bytes `n-1` to `n-128` must contain the SAUCE record.
-5. If you are using the buffer functions, it is your responsibility to make sure your buffer array is large enough to hold your file contents, an EOF character, an optional comment block, and a SAUCE record. 
-6. Unexpected behavior may occur if your file/buffer contains invalid, misplaced, or otherwise non-standard SAUCE records/comments.
+1. Any function in this library will **never** allocate memory for you. It is your responsbility to provide allocated buffers, structs, and strings to any of the functions.
+2. SAUCE is made up of two data structures: (1) a SAUCE record, and (2) an *optional* SAUCE CommentBlock. This library operates on this core assumption. 
+3. A file/buffer contains correct SAUCE data **only if** the data adheres to the [requirements](#sauce-record-requirements) listed below.
+4. SAUCE CommentBlocks are *optional*. That means comment blocks **cannot** be read, written, replaced, or removed unless a corresponding SAUCE record also exists.
+5. Buffer functions require a buffer's length, which is often the parameter `n`. Note that `n` isn't the *actual* size of the allocated array, but the length of the file contents present in the buffer. All buffer functions will treat data from index `0` to `n-1` as the provided file contents. If you are attempting to read, replace, or remove a SAUCE record/comment block, bytes `n-1` to `n-128` must contain the SAUCE record.
+6. If you are using the buffer functions, it is your responsibility to make sure your buffer array is large enough to hold your file contents, an EOF character, an optional comment block, and a SAUCE record. 
+7. Unexpected behavior may occur if your file/buffer contains invalid, misplaced, or otherwise non-standard SAUCE records/comments.
 
 
 

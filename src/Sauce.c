@@ -446,8 +446,6 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
     return SAUCE_ENULL;
   }
 
-  //TODO: add note to documentation that you must allocate the comment string yourself
-
   // open the file
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
