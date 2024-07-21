@@ -220,12 +220,6 @@ void should_FailToRead_when_BufferLengthIsTooShort() {
 }
 
 
-void should_FailToReadFromBuffer_when_CommentStringIsNull() {
-  int res = SAUCE_Comment_read(buffer, 256, commentStr, 2);
-  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
-}
-
-
 void should_FailToRead_when_BufferIsEmpty() {
   int res = SAUCE_Comment_read(buffer, 0, commentStr, 2);
   TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
@@ -258,7 +252,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToRead_when_BufferCommentPointerIsNull);
   RUN_TEST(should_FailToRead_when_BufferIsNull);
   RUN_TEST(should_FailToRead_when_BufferLengthIsTooShort);
-  RUN_TEST(should_FailToReadFromBuffer_when_CommentStringIsNull);
   RUN_TEST(should_FailToRead_when_BufferIsEmpty);
 
   return UNITY_END();
