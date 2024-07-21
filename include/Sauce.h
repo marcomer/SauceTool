@@ -185,9 +185,16 @@ enum SAUCE_FileType {
 /**
  * @brief Get an error message about the last SAUCE error that occurred.
  * 
- * @return an error message, or an empty string if no SAUCE error has yet to occur
+ * @return an error message, or an empty string if no SAUCE error has occurred yet
  */
 const char* SAUCE_get_error(void);
+
+
+/**
+ * @brief Clear the last error message. Will do nothing if no SAUCE error has occurred yet.
+ * 
+ */
+void SAUCE_clear_error(void);
 
 
 /**

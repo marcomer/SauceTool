@@ -32,10 +32,7 @@ static void SAUCE_set_error(const char* format, ...) {
   va_list ap;
 
   // free the error message
-  if (error_msg != NULL) {
-    free(error_msg);
-    error_msg = NULL;
-  }
+  SAUCE_clear_error();
 
   //TODO: if using Visual Studio, must be at least 2015
   //TODO: how do I require that?
@@ -69,6 +66,18 @@ static void SAUCE_set_error(const char* format, ...) {
   }
 
   return;
+}
+
+
+/**
+ * @brief Clear the last error message. Will do nothing if no SAUCE error has occurred yet.
+ * 
+ */
+void SAUCE_clear_error(void) {
+  if (error_msg != NULL) {
+    free(error_msg);
+    error_msg = NULL;
+  }
 }
 
 

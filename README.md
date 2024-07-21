@@ -287,7 +287,10 @@ An enum to help with identifying FileTypes. All FileType constants start with `S
 ## Helper Functions
 ### `SAUCE_get_error()`
 Get an error message about the last SAUCE error that occurred. An empty
-string will be returned if no SAUCE error has yet to occur.
+string will be returned if no SAUCE error has occurred yet.
+
+### `SAUCE_clear_error()`
+Clear the last error message. Will do nothing if no SAUCE error has occurred yet.
 
 ### `SAUCE_set_default(SAUCE* sauce)`
 Fill a SAUCE struct with the default fields. ID and Version fields will be set
