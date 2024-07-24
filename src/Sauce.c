@@ -275,7 +275,8 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
  * @param file FILE pointer to file to truncate; should be open for reading
  * @param filesize size of the original file
  * @param totalSauceSize size/length of the SAUCE data; this can include an EOF character
- * @param writeRef on success, will be set to the truncated file for writing and be positioned at the end of the file
+ * @param writeRef on success, will be set to the truncated file for writing and be positioned at the end of the file. 
+ *                 If NULL, `writeRef` will not be set and the file will automatically be closed.
  * @return 0 on success. On error, a negative error code is returned.
  */
 static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t totalSauceSize, FILE** writeRef) {
@@ -291,7 +292,10 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
       SAUCE_SET_ERROR("Could not open %s for writing", filepath);
       return SAUCE_EFOPEN;
     }
-    *writeRef = file;
+
+    if (writeRef != NULL) *writeRef = file;
+    else fclose(file);
+
     return 0;
   }
 
@@ -373,7 +377,8 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
   }
 
   fclose(tempFile);
-  *writeRef = file;
+  if (writeRef != NULL) *writeRef = file;
+  else fclose(file);
   return 0;
 }
 
