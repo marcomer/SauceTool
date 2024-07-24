@@ -11,19 +11,17 @@
 #define LONG_COMMENT_LINES    25
 
 
-static char shortComment[SAUCE_COMMENT_LINE_LENGTH];
+static char shortComment[SAUCE_COMMENT_LINE_LENGTH * 2];
 static char longComment[SAUCE_COMMENT_LINE_LENGTH * 25];
 static char buffer[2048];
 
 
 void setUp() {
   // create the short comment
-
-  memset(shortComment, ' ', SAUCE_COMMENT_LINE_LENGTH);
+  memset(shortComment, ' ', SAUCE_COMMENT_LINE_LENGTH * 2);
   memcpy(shortComment, SHORT_COMMENT_MSG, sizeof(SHORT_COMMENT_MSG) - 1);
 
   // create the long comment
-  static char longComment[SAUCE_COMMENT_LINE_LENGTH * 25];
   memset(longComment, ' ', SAUCE_COMMENT_LINE_LENGTH * 25);
   int len = copy_file_into_buffer(SAUCE_LONGNOSAUCE_PATH, longComment);
   if (len <= 0) {
@@ -106,6 +104,19 @@ void should_ReplaceCommentAndAddEOF_when_FileContainsCommentButNoEOF() {
 }
 
 
+void should_ReplaceCommentInFile_when_NewCommentIsSameSize() {
+  // Replace comment in TestFile1.ans with 2 line shortComment (will just be padded with spaces)
+  if (copy_file(SAUCE_TESTFILE1_PATH, SAUCE_COMMENT_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Failed to copy TestFile1.ans to comment_write_actual.txt");
+    return;
+  }
+
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment, 2);
+  TEST_ASSERT_EQUAL(0, res);
+
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_WRITE_ACTUAL_PATH, SAUCE_SAMECOMMENTLENGTH_PATH));
+}
+
 
 
 
@@ -168,6 +179,21 @@ void should_ReplaceCommentAndAddEOF_when_BufferContainsCommentButNoEOF() {
   TEST_ASSERT_EQUAL(222, res);
 
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_REPLACECOMMENTANDADDEOF_PATH));
+}
+
+
+void should_ReplaceCommentInBuffer_when_NewCommentIsSameSize() {
+  // Replace comment in TestFile1.ans buffer with 2 line shortComment (will just be padded with spaces)
+  int length = copy_file_into_buffer(SAUCE_TESTFILE1_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy TestFile1.ans into the buffer");
+    return;
+  }
+
+  int res = SAUCE_Comment_write(buffer, length, shortComment, 2);
+  TEST_ASSERT_EQUAL(length, res);
+
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_SAMECOMMENTLENGTH_PATH));
 }
 
 
@@ -303,10 +329,12 @@ int main(int argc, char** argv) {
   RUN_TEST(should_ReplaceComment_when_FileContainsComment);
   RUN_TEST(should_AddCommentAndEOF_when_FileContainsRecordButNoEOF);
   RUN_TEST(should_ReplaceCommentAndAddEOF_when_FileContainsCommentButNoEOF);
+  RUN_TEST(should_ReplaceCommentInFile_when_NewCommentIsSameSize);
   RUN_TEST(should_AddComment_when_BufferContainsRecord);
   RUN_TEST(should_ReplaceComment_when_BufferContainsComment);
   RUN_TEST(should_AddCommentAndEOF_when_BufferContainsRecordButNoEOF);
   RUN_TEST(should_ReplaceCommentAndAddEOF_when_BufferContainsCommentButNoEOF);
+  RUN_TEST(should_ReplaceCommentInBuffer_when_NewCommentIsSameSize);
   RUN_TEST(should_FailToWrite_when_FileDoesNotExist);
   RUN_TEST(should_FailToWrite_when_FileIsTooShort);
   RUN_TEST(should_FailToWrite_when_FilePathIsNull);

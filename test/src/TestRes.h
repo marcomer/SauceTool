@@ -89,6 +89,8 @@
 // ReplaceCommentAndAddEOF -> Contains the result of replacing SauceButNoEOF's comment with shortComment and adding EOF
 #define SAUCE_REPLACECOMMENTANDADDEOF_PATH    "expect/comment_write/ReplaceCommentAndAddEOF.txt"
 
+// SameCommentLength -> Contains the result of replacing TestFile1's comment with shortComment but padded to 2 lines
+#define SAUCE_SAMECOMMENTLENGTH_PATH          "expect/comment_write/SameCommentLength.txt"
 
 
 // Expected comment remove file results. These files should not be changed
