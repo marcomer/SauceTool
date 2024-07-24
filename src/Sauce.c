@@ -1124,8 +1124,81 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
  * @return On success, the new length of the buffer is returned. On error, a negative error code
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
-int SAUCE_Comment_write(const char* buffer, uint32_t n, const char* comment, uint8_t lines) {
-  return -1;
+int SAUCE_Comment_write(char* buffer, uint32_t n, const char* comment, uint8_t lines) {
+  if (buffer == NULL) {
+    SAUCE_SET_ERROR("Buffer was NULL");
+    return SAUCE_ENULL;
+  }
+  if (comment == NULL) {
+    SAUCE_SET_ERROR("Comment string argument was NULL");
+    return SAUCE_ENULL;
+  }
+
+  if (n == 0) {
+    SAUCE_SET_ERROR("Buffer's length is zero and cannot contain a record");
+    return SAUCE_EEMPTY;
+  }
+  if (n < SAUCE_RECORD_SIZE) {
+    SAUCE_SET_ERROR("Buffer's length is too short to contain a record");
+    return SAUCE_ESHORT;
+  }
+
+  // find record
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5) != 0) {
+    SAUCE_SET_ERROR("Buffer does not contain a record");
+    return SAUCE_ERMISS;
+  }
+
+  // return immediately if lines is 0
+  if (lines == 0) return n;
+
+  // check if there is already an EOF character before record
+  int eof_exists = 0;
+  if (n > SAUCE_RECORD_SIZE && buffer[n - SAUCE_RECORD_SIZE - 1] == SAUCE_EOF_CHAR) eof_exists = 1;
+
+  // determine if there is a comment and if so, if there is an eof before the comment
+  uint8_t totalLines = ((SAUCE*)(&buffer[n - SAUCE_RECORD_SIZE]))->Comments;
+  int comment_exists = 1; // first assume comment exists
+  if (totalLines == 0) {
+    comment_exists = 0;
+  } else {
+    // comment could already exist
+    eof_exists = 0;
+    
+    // look for comment
+    if (n < SAUCE_TOTAL_SIZE(totalLines)) {
+      comment_exists = 0;
+    } else if (memcmp(&buffer[n - SAUCE_TOTAL_SIZE(totalLines)], SAUCE_COMMENT_ID, 5) != 0) {
+      comment_exists = 0;
+    }
+
+    // look for eof char
+    if (comment_exists && n > SAUCE_TOTAL_SIZE(totalLines)) {
+      if (buffer[n - SAUCE_TOTAL_SIZE(totalLines) - 1] == SAUCE_EOF_CHAR) eof_exists = 1;
+    }
+  }
+
+  // determine where to write
+  uint32_t write_index = 0;
+  if (comment_exists)
+    write_index = (eof_exists) ? n - SAUCE_TOTAL_SIZE(totalLines) - 1 : n - SAUCE_TOTAL_SIZE(totalLines);
+  else
+    write_index = (eof_exists) ? n - SAUCE_RECORD_SIZE - 1 : n - SAUCE_RECORD_SIZE;
+
+  // move record
+  memmove(&buffer[write_index+1+SAUCE_COMMENT_BLOCK_SIZE(lines)], &buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
+
+  // add eof
+  buffer[write_index] = SAUCE_EOF_CHAR;  
+
+  // write comment
+  memcpy(&buffer[write_index+1], SAUCE_COMMENT_ID, 5);
+  memcpy(&buffer[write_index+6], comment, SAUCE_COMMENT_STRING_LENGTH(lines));
+
+  // update comments field
+  ((SAUCE*)(&buffer[write_index+1+SAUCE_COMMENT_BLOCK_SIZE(lines)]))->Comments = lines;
+
+  return write_index + 1 + SAUCE_TOTAL_SIZE(lines);
 }
 
 
