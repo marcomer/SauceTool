@@ -267,6 +267,117 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
 }
 
 
+/**
+ * @brief Truncate the file by removing all SAUCE data from the end of the file.
+ *        The last `totalSauceSize` bytes of the file will be removed. On success,
+ *        writeRef will be set to the trucated file for writing and be positioned at end of the file.    
+ * 
+ * @param file FILE pointer to file to truncate; should be open for reading
+ * @param filesize size of the original file
+ * @param totalSauceSize size/length of the SAUCE data; this can include an EOF character
+ * @param writeRef on success, will be set to the truncated file for writing and be positioned at the end of the file
+ * @return 0 on success. On error, a negative error code is returned.
+ */
+static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t totalSauceSize, FILE** writeRef) {
+  if (filesize < totalSauceSize) {
+    SAUCE_SET_ERROR("The total size of the SAUCE data cannot be greater than the filesize");
+    return SAUCE_EOTHER;
+  }
+
+  if (filesize == totalSauceSize) {
+    // just clear the entire file
+    FILE* file = fopen(filepath, "wb");
+    if (file == NULL) {
+      SAUCE_SET_ERROR("Could not open %s for writing", filepath);
+      return SAUCE_EFOPEN;
+    }
+    *writeRef = file;
+    return 0;
+  }
+
+  //TODO: check for windows/posix truncate functions
+  
+  // open file and temp file
+  FILE* file = fopen(filepath, "rb");
+  if (file == NULL) {
+    SAUCE_SET_ERROR("Could not open %s for reading", filepath);
+    return SAUCE_EFOPEN;
+  }
+
+  FILE* tempFile = tmpfile();
+  if (tempFile == NULL) {
+    fclose(file);
+    SAUCE_SET_ERROR("Failed to open a temporary file");
+    return SAUCE_EFOPEN;
+  }
+
+  // copy file into tempFile
+  char buffer[FILE_BUF_READ_SIZE];
+  size_t read, write, readSize;
+  uint32_t total = 0;
+  
+  readSize = FILE_BUF_READ_SIZE;
+  while (1) {
+    if (filesize - totalSauceSize - total < FILE_BUF_READ_SIZE) readSize = filesize - totalSauceSize - total;
+    read = fread(buffer, 1, readSize, file);
+    total += read;
+    if (read == 0) {
+      if (feof(file)) break;
+      fclose(file);
+      fclose(tempFile);
+      SAUCE_SET_ERROR("Failed to read from %s", filepath);
+      return SAUCE_EFFAIL;
+    }
+
+    // write to tempFile
+    write = fwrite(buffer, 1, read, tempFile);
+    if (write != read) {
+      fclose(file);
+      fclose(tempFile);
+      SAUCE_SET_ERROR("Failed to write to tempfile");
+      return SAUCE_EFFAIL;
+    }
+
+    if (total == filesize - totalSauceSize) {
+      break;
+    }
+  }
+
+  // prepare for copying temp to file
+  rewind(tempFile);
+  file = freopen(filepath, "wb", file);
+  if (file == NULL) {
+    fclose(tempFile);
+    SAUCE_SET_ERROR("Failed to reopen %s for writing", filepath);
+    return SAUCE_EFOPEN;
+  }
+
+  // copy entire tempFile to file
+  while(1) {
+    read = fread(buffer, 1, FILE_BUF_READ_SIZE, tempFile);
+    if (read == 0) {
+      if (feof(tempFile)) break;
+      fclose(file);
+      fclose(tempFile);
+      SAUCE_SET_ERROR("Failed to read from tempfile");
+      return SAUCE_EFFAIL;
+    }
+
+    write = fwrite(buffer, 1, read, file);
+    if (write != read) {
+      fclose(file);
+      fclose(tempFile);
+      SAUCE_SET_ERROR("Failed to write to %s");
+      return SAUCE_EFFAIL;
+    } 
+  }
+
+  fclose(tempFile);
+  *writeRef = file;
+  return 0;
+}
+
+
 
 
 
@@ -798,7 +909,122 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
  *         to get more info on the error.
  */
 int SAUCE_Comment_fwrite(const char* filepath, const char* comment, uint8_t lines) {
-  return -1;
+  if (filepath == NULL) {
+    SAUCE_SET_ERROR("Filepath was NULL");
+    return SAUCE_ENULL;
+  }
+  if (comment == NULL) {
+    SAUCE_SET_ERROR("Comment string argument was NULL");
+    return SAUCE_ENULL;
+  }
+
+  // open the file
+  FILE* file = fopen(filepath, "rb");
+  if (file == NULL) {
+    SAUCE_SET_ERROR("Could not open %s for reading", filepath);
+    return SAUCE_EFOPEN;
+  }
+
+  // get the record
+  char record[SAUCE_RECORD_SIZE + 1];
+  uint32_t filesize = 0;
+  int res = SAUCE_file_find_record(file, record, &filesize);
+  if (res < 0) {
+    fclose(file);
+    switch (res) {
+      case SAUCE_ERMISS:
+        SAUCE_SET_ERROR("%s does not contain a record", filepath);
+        break;
+      case SAUCE_EEMPTY:
+        SAUCE_SET_ERROR("%s is an empty file and cannot contain a record", filepath);
+        break;
+      case SAUCE_ESHORT:
+        SAUCE_SET_ERROR("%s is too short to contain a record", filepath);
+        break;
+      default:
+        break;
+    }
+    return res;
+  }
+
+  // check if no lines need to be written
+  if (lines == 0) {
+    fclose(file);
+    return 0;
+  }
+
+  // get start of record
+  uint8_t record_start = 1;
+  if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) record_start = 0;
+
+  int eof_exists = 0;
+  if (record_start == 1 && record[0] == SAUCE_EOF_CHAR) eof_exists = 1;
+
+  // check if a valid comment and/or eof exists
+  uint8_t totalLines = ((SAUCE*)(&record[record_start]))->Comments;
+  int comment_exists = 1; // first assume comment exists
+  if (totalLines == 0) {
+    comment_exists = 0;
+  } else {
+    eof_exists = 0;
+    char commentBuffer[SAUCE_COMMENT_LINE_LENGTH + 6];
+    res = SAUCE_file_find_comment(file, commentBuffer, filesize, totalLines, 1);
+    if (res == SAUCE_ECMISS || res == SAUCE_ESHORT) {
+      comment_exists = 0;
+    } else if (res < 0) {
+      fclose(file);
+      return res;
+    } else if (commentBuffer[0] == SAUCE_EOF_CHAR) {
+      eof_exists = 1;
+    }
+  }
+
+  fclose(file);
+
+  // prep the file for writing
+  if (totalLines > lines) {
+    // file will be shorter, truncate it
+    res = SAUCE_file_truncate(filepath, filesize, SAUCE_TOTAL_SIZE(totalLines) + ((eof_exists) ? 1 : 0), &file);
+    if (res < 0) return res;
+  } else {
+    // file will remain same size or larger, can simply overwrite old comment/record
+    uint32_t write_index = 0;
+    if (comment_exists) { // start before comment
+      write_index = (eof_exists) ? filesize - SAUCE_TOTAL_SIZE(totalLines) - 1: filesize - SAUCE_TOTAL_SIZE(totalLines);
+    } else { // start before record
+      write_index = (eof_exists) ? filesize - SAUCE_RECORD_SIZE - 1 : filesize - SAUCE_RECORD_SIZE;
+    }
+
+    file = fopen(filepath, "rb+");
+    if (file == NULL) {
+      SAUCE_SET_ERROR("Failed to open %s for reading and writing", filepath);
+      return SAUCE_EFOPEN;
+    }
+    if (fseek(file, write_index, SEEK_SET) < 0) {
+      fclose(file);
+      SAUCE_SET_ERROR("Failed to seek to beginning of original comment in %s", filepath);
+      return SAUCE_EFFAIL;
+    }
+  }
+
+  // write eof, comment, and record to buffer
+  char* writeBuffer = malloc(SAUCE_TOTAL_SIZE(lines) + 1);
+  writeBuffer[0] = SAUCE_EOF_CHAR;
+  ((SAUCE*)(&record[record_start]))->Comments = lines;
+  memcpy(writeBuffer+1, SAUCE_COMMENT_ID, 5);
+  memcpy(writeBuffer+6, comment, SAUCE_COMMENT_STRING_LENGTH(lines));
+  memcpy(writeBuffer+1+SAUCE_COMMENT_BLOCK_SIZE(lines), &record[record_start], SAUCE_RECORD_SIZE);
+
+  // write buffer to file
+  res = fwrite(writeBuffer, 1, SAUCE_TOTAL_SIZE(lines) + 1, file);
+  fclose(file);
+  free(writeBuffer);
+  if (res != SAUCE_TOTAL_SIZE(lines) + 1) {
+    SAUCE_SET_ERROR("Failed to write new comment and record to %s", filepath);
+    return SAUCE_EFFAIL;
+  }
+
+  return 0;
 }
 
 
