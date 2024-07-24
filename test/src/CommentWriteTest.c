@@ -256,9 +256,18 @@ void should_FailToWriteToFile_when_FileContainsCommentButNoRecord() {
 }
 
 
+void should_FailToWriteToFile_when_FileIsEmpty() {
+  if (copy_file(SAUCE_EMPTYFILE_PATH, SAUCE_COMMENT_WRITE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Failed to copy EmptyFile.txt to comment_write_actual.txt");
+    return;
+  }
 
+  int res = SAUCE_Comment_fwrite(SAUCE_COMMENT_WRITE_ACTUAL_PATH, shortComment, SHORT_COMMENT_LINES);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
 
-
+  // assert that the file didn't change
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_WRITE_ACTUAL_PATH, SAUCE_EMPTYFILE_PATH));
+}
 
 
 
@@ -274,7 +283,7 @@ void should_FailToWrite_when_BufferIsTooShort() {
   }
 
   int res = SAUCE_Comment_write(buffer, length, shortComment, SHORT_COMMENT_LINES);
-  TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
+  TEST_ASSERT_EQUAL(SAUCE_ESHORT, res);
 
   // assert that the buffer has not changed
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_SHORTFILE_PATH));
@@ -302,7 +311,6 @@ void should_FailToWriteToBuffer_when_CommentIsNull() {
 }
 
 
-
 void should_FailToWriteToBuffer_when_BufferContainsCommentButNoRecord() {
   int length = copy_file_into_buffer(SAUCE_COMMENTBUTNORECORD_PATH, buffer);
   if (length <= 0) {
@@ -313,6 +321,21 @@ void should_FailToWriteToBuffer_when_BufferContainsCommentButNoRecord() {
   int res = SAUCE_Comment_write(buffer, length, shortComment, SHORT_COMMENT_LINES);
   TEST_ASSERT_EQUAL(SAUCE_ERMISS, res);
   
+  // assert that the buffer hasn't changed
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_COMMENTBUTNORECORD_PATH));
+}
+
+
+void should_FailToWriteToBuffer_when_BufferLengthIsZero() {
+  int length = copy_file_into_buffer(SAUCE_COMMENTBUTNORECORD_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy CommentButNoRecord.ans to the buffer");
+    return;
+  }
+
+  int res = SAUCE_Comment_write(buffer, 0, shortComment, SHORT_COMMENT_LINES);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
+
   // assert that the buffer hasn't changed
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_COMMENTBUTNORECORD_PATH));
 }
@@ -340,10 +363,12 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToWrite_when_FilePathIsNull);
   RUN_TEST(should_FailToWriteToFile_when_CommentIsNull);
   RUN_TEST(should_FailToWriteToFile_when_FileContainsCommentButNoRecord);
+  RUN_TEST(should_FailToWriteToFile_when_FileIsEmpty);
   RUN_TEST(should_FailToWrite_when_BufferIsTooShort);
   RUN_TEST(should_FailToWRite_when_BufferIsNull);
   RUN_TEST(should_FailToWriteToBuffer_when_CommentIsNull);
   RUN_TEST(should_FailToWriteToBuffer_when_BufferContainsCommentButNoRecord);
+  RUN_TEST(should_FailToWriteToBuffer_when_BufferLengthIsZero);
 
   return UNITY_END();
 }
