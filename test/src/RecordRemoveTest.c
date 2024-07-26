@@ -208,6 +208,15 @@ void should_FailToRemoveFromFile_when_FileIsTooShort() {
 }
 
 
+void should_FailToRemoveFromFile_when_FileIsEmpty() {
+  int res = SAUCE_fremove(SAUCE_REMOVE_ACTUAL_PATH);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
+
+  // assert that remove_actual did not change
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_REMOVE_ACTUAL_PATH, SAUCE_EMPTYFILE_PATH));
+}
+
+
 void should_FailToRemoveFromFile_when_FilePathIsNULL() {
   int res = SAUCE_fremove(NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
@@ -250,6 +259,21 @@ void should_FailToRemoveFromBuf_when_BufferIsTooShort() {
 }
 
 
+void should_FailToRemoveFromBuf_when_BufferIsEmpty() {
+  int length = copy_file_into_buffer(SAUCE_SHORTFILE_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Could not copy ShortFile.txt into a buffer");
+    return;
+  }
+
+  int res = SAUCE_remove(buffer, 0);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
+
+  // assert that the buffer's contents have not been changed
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_SHORTFILE_PATH));
+}
+
+
 void should_FailToRemoveFromBuf_when_BufferIsNULL() {
   int res = SAUCE_remove(NULL, 200);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
@@ -275,9 +299,11 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToRemoveFromFile_when_FileDoesNotExist);
   RUN_TEST(should_FailToRemoveFromFile_when_SAUCEIsMissing);
   RUN_TEST(should_FailToRemoveFromFile_when_FileIsTooShort);
+  RUN_TEST(should_FailToRemoveFromFile_when_FileIsEmpty);
   RUN_TEST(should_FailToRemoveFromFile_when_FilePathIsNULL);
   RUN_TEST(should_FailToRemoveFromBuf_when_SAUCEIsMissing);
   RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsTooShort);
+  RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsEmpty);
   RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsNULL);
 
   return UNITY_END();
