@@ -442,22 +442,29 @@ typedef struct SAUCEInfo {
 } SAUCEInfo;
 
 /**
- * @brief Get info about SAUCE data in a file. See SAUCEInfo struct for what info
- *        is collected. If `dataBuffer` is not NULL, then `dataBuffer` will be malloced
+ * @brief Get info about SAUCE data in a file and optionally retrieve all available SAUCE data. 
+ *        See SAUCEInfo struct for what info is collected. `info` will always be set appropriately, 
+ *        no matter the return condition.
+ * 
+ *        If `dataBuffer` is not NULL, then `dataBuffer` will be malloced
  *        and contain a copy of any found SAUCE data. Length of `dataBuffer` will be
  *        `SAUCE_TOTAL_SIZE(info->lines)`. The `dataBuffer` will not contain the eof character,
- *        if the eof exists. If no SAUCE data is found, meaning `info->record_exists` is false, 
- *        then `dataBuffer` will not be malloced.
- * 
+ *        if the eof exists. If any error condition occurs, then `dataBuffer` will NOT be
+ *        allocated.
  * 
  *        Some info will be irrelevant if certain conditions are not met.
  *        For example, if no record exists, all other SAUCEInfo fields will be irrelevant.
  * 
+ *        Note: if you only need to read a record, do not use this function. This function
+ *        is designed to either retrieve ALL available SAUCE data OR retrieve NOTHING if the function
+ *        is unable to find a record or if a comment is indicated by the record but can't be found.
+ * 
  * @param filepath path to file
  * @param info SAUCEInfo struct which will be filled with info on the SAUCE data
  * @param filesizePtr will be set to the size of the file. Can be NULL.
- * @param dataBuffer buffer that will be malloced and contain the SAUCE data; if NULL, nothing will be malloced
- * @return 0 if SAUCE data was found. Otherwise, a negative error code will be returned.
+ * @param dataBuffer buffer that will be malloced and contain the SAUCE data; if NULL, nothing will be allocated
+ * @return 0 on success. A success is when a record is found or a record is found along with an optional valid comment. 
+ *         On error, a negative error code is returned.
  */
 static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* filesizePtr, char** dataBuffer) {
   if (filepath == NULL) {
@@ -524,7 +531,10 @@ static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* 
     if (res < 0) {
       info->comment_exists = 0;
       if (res == SAUCE_ECMISS) {
+        free(commentBuffer);
+        fclose(file);
         SAUCE_set_error("Record in %s claims that %d comment lines can be read, but the comment could not be found", filepath, info->lines);
+        return SAUCE_ECMISS;
       }
     } else {
       if (commentBuffer[0] == SAUCE_EOF_CHAR) info->eof_exists = 1;
@@ -703,80 +713,26 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
     return SAUCE_ENULL;
   }
 
-  // open the file
-  FILE* file = fopen(filepath, "rb");
-  if (file == NULL) {
-    SAUCE_SET_ERROR("Could not open %s for reading", filepath);
-    return SAUCE_EFOPEN;
-  }
+  if (nLines == 0) return 0;
 
-  // get the record
-  char record[SAUCE_RECORD_SIZE + 1];
+  SAUCEInfo info;
   uint32_t filesize = 0;
-  int res = SAUCE_file_find_record(file, record, &filesize);
+  char* buffer = NULL;
+  int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
   if (res < 0) {
-    fclose(file);
-    switch (res) {
-      case SAUCE_ERMISS:
-        SAUCE_SET_ERROR("%s does not contain a record", filepath);
-        break;
-      case SAUCE_EEMPTY:
-        SAUCE_SET_ERROR("%s is an empty file and cannot contain a record", filepath);
-        break;
-      case SAUCE_ESHORT:
-        SAUCE_SET_ERROR("%s is too short to contain a record", filepath);
-        break;
-      default:
-        break;
-    }
     return res;
-  }
-
-  // get start of record
-  uint8_t record_start = 1;
-  if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) record_start = 0;
-
-  
-  // check if file's record has wrong num of comment lines
-  uint8_t totalLines = ((SAUCE*)(&record[record_start]))->Comments;
-  if (totalLines > 0 && filesize < SAUCE_TOTAL_SIZE(totalLines)) {
-    fclose(file);
-    SAUCE_SET_ERROR("Record claims that %s contains %u comment lines, but the file is too short to contain that many lines", filepath, (unsigned int)totalLines);
-    return SAUCE_ESHORT;
-  }
-
-  // determine num of lines to read
-  nLines = (totalLines > nLines) ? nLines : totalLines;
-
-  // check if no lines need to or can be read
-  if (nLines == 0) {
-    fclose(file);
+  } else if (!info.comment_exists) {
     comment[0] = 0;
     return 0;
   }
 
-  // retrieve the comment
-  uint16_t commentLen = SAUCE_COMMENT_BLOCK_SIZE(nLines) + 1;
-  char* commentBuffer = malloc(commentLen);
+  nLines = (nLines > info.lines) ? info.lines : nLines;
 
-  res = SAUCE_file_find_comment(file, commentBuffer, filesize, totalLines, nLines);
-  fclose(file);
-  if (res == SAUCE_ECMISS) {
-    free(commentBuffer);
-    SAUCE_SET_ERROR("Record in %s indicated that %u total comment lines could be read, but the comment id could not be found", filepath, totalLines);
-    return SAUCE_ECMISS;
-  } else if (res < 0) {
-    free(commentBuffer);
-    return res;
-  }
-
-  // grab comment lines
-  char* commentBuffer_start = (memcmp(commentBuffer+1, SAUCE_COMMENT_ID, 5) == 0) ? commentBuffer+1 : commentBuffer;
-  commentBuffer_start += 5;
-  memcpy(comment, commentBuffer_start, SAUCE_COMMENT_STRING_LENGTH(nLines));
+  // copy comment to comment string
+  memcpy(comment, buffer+5, SAUCE_COMMENT_STRING_LENGTH(nLines));
   comment[SAUCE_COMMENT_STRING_LENGTH(nLines)] = 0;
-  
-  free(commentBuffer);
+  if (buffer != NULL) free(buffer);
+
   return nLines;
 }
 
