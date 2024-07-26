@@ -86,17 +86,16 @@ void should_RemoveFromFile_when_FileOnlyContainsRecord() {
 
 
 void should_RemoveFromFile_when_FileOnlyContainsRecordWithNoEOF() {
-  // copy SauceButNoEOF.ans to remove_actual
-  if (copy_file(SAUCE_SAUCEBUTNOEOF_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
-    TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans to remove_actual");
+  // copy OnlyRecord.ans to remove_actual
+  if (copy_file(SAUCE_ONLYRECORD_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy OnlyRecord.ans to remove_actual");
     return;
   }
 
   int res = SAUCE_fremove(SAUCE_REMOVE_ACTUAL_PATH);
   TEST_ASSERT_EQUAL(0, res);
 
-
-    // attempt to read remove_actual
+  // attempt to read remove_actual
   FILE* actual = fopen(SAUCE_REMOVE_ACTUAL_PATH, "rb");
   if (actual == NULL) {
     TEST_FAIL_MESSAGE("Could not open remove_actual.txt");
@@ -159,10 +158,10 @@ void should_RemoveFromBuffer_when_BufferOnlyContainsRecord() {
 
 
 void should_RemoveFromBuffer_when_BufferOnlyContainsRecordWithNoEOF() {
-  // copy SauceButNoEOF.ans into a buffer
-  int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
+  // copy OnlyRecord.ans into a buffer
+  int length = copy_file_into_buffer(SAUCE_ONLYRECORD_PATH, buffer);
   if (length <= 0) {
-    TEST_FAIL_MESSAGE("Failed to copy TestFile2.ans into a buffer");
+    TEST_FAIL_MESSAGE("Failed to copy OnlyRecord.ans into a buffer");
     return;
   }
 
