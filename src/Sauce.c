@@ -716,9 +716,8 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   if (nLines == 0) return 0;
 
   SAUCEInfo info;
-  uint32_t filesize = 0;
   char* buffer = NULL;
-  int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
+  int res = SAUCE_file_get_info(filepath, &info, NULL, &buffer);
   if (res < 0) {
     return res;
   } else if (!info.comment_exists) {
