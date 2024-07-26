@@ -121,9 +121,9 @@ static void SAUCE_buffer_replace_record(char* buffer, const SAUCE* sauce) {
 static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) {
   rewind(file);
   
-  char buffer[FILE_BUF_READ_SIZE*2];
+  char buffer[FILE_BUF_READ_SIZE*2 + 1];
   char* curr = &buffer[FILE_BUF_READ_SIZE]; // set curr to middle of buffer
-  memset(buffer, 0, FILE_BUF_READ_SIZE*2);
+  memset(buffer, 0, FILE_BUF_READ_SIZE*2 + 1);
 
   size_t read = 0;
   uint32_t total = 0;
@@ -133,7 +133,8 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
     total += read;
     if (read < FILE_BUF_READ_SIZE) {
       if (total == read) {
-        memcpy(buffer, curr, FILE_BUF_READ_SIZE);
+        memcpy(buffer, curr, total);
+        memset(curr, 0, FILE_BUF_READ_SIZE);
       }
       if (feof(file)) {
         break;
@@ -143,6 +144,7 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
     }
 
     memcpy(buffer, curr, FILE_BUF_READ_SIZE);
+    memset(curr, 0, FILE_BUF_READ_SIZE);
   }
 
   // set file size
@@ -157,28 +159,25 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
     return SAUCE_ESHORT;
   }
 
-  // copy record into buffer
-  if (total == SAUCE_RECORD_SIZE) {
-    // total is exactly record size
-    memcpy(record, buffer, SAUCE_RECORD_SIZE);
-  } else if (total < FILE_BUF_READ_SIZE) {
-    // total is less than FILE_BUF_READ_SIZE
-    memcpy(record, buffer, SAUCE_RECORD_SIZE + 1);
-  } else {
-    // piece together record, length is FILE_BUF_READ_SIZE + read
-    memcpy(record, (buffer + FILE_BUF_READ_SIZE + read - SAUCE_RECORD_SIZE - 1), SAUCE_RECORD_SIZE + 1);
+  
+  uint32_t record_start = (total < FILE_BUF_READ_SIZE) ? 
+                            total - SAUCE_RECORD_SIZE : 
+                            (read + FILE_BUF_READ_SIZE) - SAUCE_RECORD_SIZE;
+
+  // check for record
+  if (memcmp(&buffer[record_start], SAUCE_RECORD_ID, 5) != 0) {
+    record[0] = (record_start > 0) ? buffer[record_start-1] : 0;
+    return SAUCE_ERMISS;
   }
 
-  // check for SAUCE id
-  if (total == SAUCE_RECORD_SIZE) {
-    if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) return 0;
+  // copy record
+  if (record_start > 0) {
+    memcpy(record, &buffer[record_start - 1], SAUCE_RECORD_SIZE + 1);
   } else {
-    if (memcmp(record+1, SAUCE_RECORD_ID, 5) == 0) return 0;
+    memcpy(record, &buffer[record_start], SAUCE_RECORD_SIZE);
   }
 
-  // record does not exist
-  record[0] = record[SAUCE_RECORD_SIZE];
-  return SAUCE_ERMISS;
+  return 0;
 }
 
 
@@ -431,6 +430,135 @@ static uint32_t insert_eof_char(char* buffer, uint32_t n, uint8_t lines) {
   return n;
 }
 
+
+
+
+typedef struct SAUCEInfo {
+  int record_exists;    // boolean; true if the record exists, false if otherwise
+  int comment_exists;   // boolean; true if the comment exists, false if otherwise
+  int eof_exists;       // boolean; true if the eof char exists, false if otherwise. Will be immediately before comment/record.
+  uint8_t lines;        // The number of comment lines reported in the record. Note that a positive `lines` and false `comment_exists` signals an invalid comment.
+  uint32_t start;       // The starting index/position of the SAUCE data; if an eof exists, it will be immediately before this index
+} SAUCEInfo;
+
+/**
+ * @brief Get info about SAUCE data in a file. See SAUCEInfo struct for what info
+ *        is collected. If `dataBuffer` is not NULL, then `dataBuffer` will be malloced
+ *        and contain a copy of any found SAUCE data. Length of `dataBuffer` will be
+ *        `SAUCE_TOTAL_SIZE(info->lines)`. The `dataBuffer` will not contain the eof character,
+ *        if the eof exists. If no SAUCE data is found, meaning `info->record_exists` is false, 
+ *        then `dataBuffer` will not be malloced.
+ * 
+ * 
+ *        Some info will be irrelevant if certain conditions are not met.
+ *        For example, if no record exists, all other SAUCEInfo fields will be irrelevant.
+ * 
+ * @param filepath path to file
+ * @param info SAUCEInfo struct which will be filled with info on the SAUCE data
+ * @param filesizePtr will be set to the size of the file. Can be NULL.
+ * @param dataBuffer buffer that will be malloced and contain the SAUCE data; if NULL, nothing will be malloced
+ * @return 0 if SAUCE data was found. Otherwise, a negative error code will be returned.
+ */
+static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* filesizePtr, char** dataBuffer) {
+  if (filepath == NULL) {
+    SAUCE_SET_ERROR("Filepath was NULL");
+    return SAUCE_ENULL;
+  }
+  if (info == NULL) {
+    SAUCE_SET_ERROR("SAUCEInfo struct was NULL");
+    return SAUCE_ENULL;
+  }
+
+  memset(info, 0, sizeof(SAUCEInfo));
+
+  FILE* file = fopen(filepath, "rb");
+  if (file == NULL) {
+    SAUCE_SET_ERROR("Failed to open %s for reading");
+    return SAUCE_EFOPEN;
+  }
+
+  char record[SAUCE_RECORD_SIZE + 1];
+  uint32_t filesize = 0;
+  int res = SAUCE_file_find_record(file, record, &filesize);
+  if (filesizePtr != NULL) *filesizePtr = filesize;
+  if (res < 0) {
+    fclose(file);
+    switch (res) {
+      case SAUCE_ERMISS:
+        SAUCE_SET_ERROR("%s does not contain a record", filepath);
+        break;
+      case SAUCE_EEMPTY:
+        SAUCE_SET_ERROR("%s is an empty file and cannot contain a record", filepath);
+        break;
+      case SAUCE_ESHORT:
+        SAUCE_SET_ERROR("%s is too short to contain a record", filepath);
+        break;
+      default:
+        break;
+    }
+    info->record_exists = 0;
+    return res;
+  }
+
+  // found record, fill appropriate info
+  info->record_exists = 1;
+  info->start = filesize - SAUCE_RECORD_SIZE;
+  info->eof_exists = 0;
+
+  // get start of record
+  uint8_t record_start = 1;
+  if (memcmp(record, SAUCE_RECORD_ID, 5) == 0) record_start = 0;
+  if (record_start == 1 && record[0] == SAUCE_EOF_CHAR) info->eof_exists = 1;
+  info->lines = ((SAUCE*)(&record[record_start]))->Comments;
+
+  // look for comment
+  char* commentBuffer = NULL;
+  if (info->lines == 0) {
+    info->comment_exists = 0;
+  } else {
+    info->comment_exists = 1;
+    info->eof_exists = 0;
+    uint8_t linesToRead = (dataBuffer == NULL) ? 1 : info->lines;
+    commentBuffer = malloc(SAUCE_COMMENT_BLOCK_SIZE(info->lines) + 1);
+    res = SAUCE_file_find_comment(file, commentBuffer, filesize, info->lines, info->lines);
+    if (res < 0) {
+      info->comment_exists = 0;
+      if (res == SAUCE_ECMISS) {
+        SAUCE_set_error("Record in %s claims that %d comment lines can be read, but the comment could not be found", filepath, info->lines);
+      }
+    } else {
+      if (commentBuffer[0] == SAUCE_EOF_CHAR) info->eof_exists = 1;
+      info->start = filesize - SAUCE_TOTAL_SIZE(info->lines);
+    }
+  }
+
+  fclose(file);
+
+
+  if (dataBuffer == NULL) {
+    // nothing else to do, data does not need to copied
+    if (commentBuffer != NULL) free(commentBuffer);
+    return 0;
+  }
+
+  // write to the dataBuffer
+  if (info->comment_exists) {
+    *dataBuffer = malloc(SAUCE_TOTAL_SIZE(info->lines));
+    if (info->eof_exists) 
+      memcpy(*dataBuffer, commentBuffer+1, SAUCE_COMMENT_BLOCK_SIZE(info->lines));
+    else
+      memcpy(*dataBuffer, commentBuffer, SAUCE_COMMENT_BLOCK_SIZE(info->lines));
+    memcpy(&((*dataBuffer)[SAUCE_COMMENT_BLOCK_SIZE(info->lines)]), &record[record_start], SAUCE_RECORD_SIZE);
+  }
+  else {
+    *dataBuffer = malloc(SAUCE_RECORD_SIZE);
+    memcpy(*dataBuffer, &record[record_start], SAUCE_RECORD_SIZE);
+  }
+
+  if (commentBuffer != NULL) free(commentBuffer);
+
+  return 0;
+}
 
 
 
@@ -1221,7 +1349,21 @@ int SAUCE_Comment_write(char* buffer, uint32_t n, const char* comment, uint8_t l
  *         to get more info on the error.
  */
 int SAUCE_fremove(const char* filepath) {
-  return -1;
+  if (filepath == NULL) {
+    SAUCE_SET_ERROR("Filepath was NULL");
+    return SAUCE_ENULL;
+  }
+
+  SAUCEInfo info;
+  uint32_t filesize;
+  int res = SAUCE_file_get_info(filepath, &info, &filesize, NULL);
+  if (res < 0 || !info.record_exists) return res;
+
+  uint32_t saucesize = filesize - info.start;
+  if (info.eof_exists) saucesize++;
+
+  res = SAUCE_file_truncate(filepath, filesize, saucesize, NULL);
+  if (res < 0) return res;
 }
 
 
