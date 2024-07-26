@@ -59,7 +59,22 @@ void should_RemoveFromFile_when_FileContainsCommentAndRecord() {
 }
 
 
-void should_RemoveFromFile_when_FileOnlyContainsRecord() {
+void should_RemoveFromFile_when_FileContainsCommentAndRecordButNoEOF() {
+  // copy SauceButNoEOF.ans to remove_actual
+  if (copy_file(SAUCE_SAUCEBUTNOEOF_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy SauceButNoEOF.ans to remove_actual.txt");
+    return;  
+  }
+
+  int res = SAUCE_fremove(SAUCE_REMOVE_ACTUAL_PATH);
+  TEST_ASSERT_EQUAL(0, res);
+
+  // equivalent to removing comment and record from TestFile1
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_REMOVE_ACTUAL_PATH, SAUCE_REMOVE_RECORD_AND_COMMENT_PATH));
+}
+
+
+void should_RemoveFromFile_when_FileOnlyContainsRecordAndEOF() {
   // copy TestFile2 to remove_actual
   if (copy_file(SAUCE_TESTFILE2_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
     TEST_FAIL_MESSAGE("Could not copy TestFile2.ans to remove_actual.txt");
@@ -144,7 +159,22 @@ void should_RemoveFromBuffer_when_BufferContainsCommentAndRecord() {
 }
 
 
-void should_RemoveFromBuffer_when_BufferOnlyContainsRecord() {
+void should_RemoveFromBuffer_when_BufferContainsCommentAndRecordButNoEOF() {
+  // copy SauceButNoEOF.ans into a buffer
+  int length = copy_file_into_buffer(SAUCE_SAUCEBUTNOEOF_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy SauceButNoEOF.ans into a buffer");
+    return;
+  }
+
+  int res = SAUCE_remove(buffer, length);
+  TEST_ASSERT_EQUAL(REMOVE_BOTH_EXPECTED_LEN, res);
+
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_REMOVE_RECORD_AND_COMMENT_PATH));
+}
+
+
+void should_RemoveFromBuffer_when_BufferOnlyContainsRecordAndEOF() {
   // copy TestFile2 into a buffer
   int length = copy_file_into_buffer(SAUCE_TESTFILE2_PATH, buffer);
   if (length <= 0) {
@@ -289,11 +319,13 @@ int main(int argc, char** argv) {
 
   RUN_TEST(should_RemoveFromFile_when_FileContainsRecord);
   RUN_TEST(should_RemoveFromFile_when_FileContainsCommentAndRecord);
-  RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecord);
+  RUN_TEST(should_RemoveFromFile_when_FileContainsCommentAndRecordButNoEOF);
+  RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecordAndEOF);
   RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsRecord);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsCommentAndRecord);
-  RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecord);
+  RUN_TEST(should_RemoveFromBuffer_when_BufferContainsCommentAndRecordButNoEOF);
+  RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecordAndEOF);
   RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecordWithNoEOF);
   RUN_TEST(should_FailToRemoveFromFile_when_FileDoesNotExist);
   RUN_TEST(should_FailToRemoveFromFile_when_SAUCEIsMissing);
