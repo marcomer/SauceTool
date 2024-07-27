@@ -18,6 +18,12 @@ SAUCE_STATIC_ASSERT(sizeof(SAUCE) == 128, sizeof_SAUCE_struct_must_be_128_bytes)
 // The SAUCE error message
 static char* error_msg = NULL;
 
+// Declarations
+
+static int SAUCE_set_error(const char* format, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+
 // Set the current error message using the `printf()` family formatting scheme.
 // Will return SAUCE_EOTHER from the calling function if SAUCE_set_error() fails.
 // Note that parameters must be ordered exactly as if you were calling SAUCE_set_error().
@@ -370,7 +376,7 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
     if (write != read) {
       fclose(file);
       fclose(tempFile);
-      SAUCE_SET_ERROR("Failed to write to %s");
+      SAUCE_SET_ERROR("Failed to write to %s", filepath);
       return SAUCE_EFFAIL;
     } 
   }
