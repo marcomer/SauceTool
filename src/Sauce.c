@@ -1415,7 +1415,30 @@ int SAUCE_remove(char* buffer, uint32_t n) {
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
 int SAUCE_Comment_remove(char* buffer, uint32_t n) {
-  return -1;
+  SAUCEInfo info;
+  int res = SAUCE_buffer_get_info(buffer, n, &info);
+  if (res < 0 && !info.record_exists) return res;
+
+  // check info on comment
+  if (info.lines > 0 && !info.comment_exists) {
+    return SAUCE_ECMISS;
+  } else if (!info.comment_exists) {
+    SAUCE_SET_ERROR("Buffer contains zero comment lines, so no comment can be removed");
+    return SAUCE_ECMISS;
+  }
+  
+  // move record in place of comment
+  if (info.eof_exists) {
+    memmove(&buffer[info.start], &buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
+    ((SAUCE*)(&buffer[info.start]))->Comments = 0;
+    return n - SAUCE_COMMENT_BLOCK_SIZE(info.lines);
+  }
+
+  // move record in place of comment and add eof
+  buffer[info.start] = SAUCE_EOF_CHAR;
+  memmove(&buffer[info.start+1], &buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
+  ((SAUCE*)(&buffer[info.start+1]))->Comments = 0;
+  return n - SAUCE_COMMENT_BLOCK_SIZE(info.lines) + 1;
 }
 
 
