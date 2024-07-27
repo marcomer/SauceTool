@@ -118,6 +118,15 @@ void should_FailToRemove_when_FileIsTooShort() {
 }
 
 
+void should_FailToRemove_when_FileIsEmpty() {
+  int res = SAUCE_Comment_fremove(SAUCE_COMMENT_REMOVE_ACTUAL_PATH);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
+
+  // assert that the file did not change
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_COMMENT_REMOVE_ACTUAL_PATH, SAUCE_EMPTYFILE_PATH));
+}
+
+
 void should_FailToRemove_when_FilePathIsNull() {
   int res = SAUCE_Comment_fremove(NULL);
   TEST_ASSERT_EQUAL(SAUCE_ENULL, res);
@@ -195,6 +204,21 @@ void should_FailToRemove_when_BufferIsTooShort() {
 
   int res = SAUCE_Comment_remove(buffer, length);
   TEST_ASSERT_EQUAL(SAUCE_ESHORT, res);
+
+  // assert that the buffer didn't change
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_SHORTFILE_PATH));
+}
+
+
+void should_FailToRemove_when_BufferIsEmpty() {
+  int length = copy_file_into_buffer(SAUCE_SHORTFILE_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy ShortFile.txt into the buffer");
+    return;
+  }
+
+  int res = SAUCE_Comment_remove(buffer, 0);
+  TEST_ASSERT_EQUAL(SAUCE_EEMPTY, res);
 
   // assert that the buffer didn't change
   TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, length, SAUCE_SHORTFILE_PATH));
@@ -280,12 +304,14 @@ int main(int argc, char** argv) {
   RUN_TEST(should_RemoveCommentAndAddEOF_when_BufferContainsCommentButNoEOF);
   RUN_TEST(should_FailToRemove_when_FileDoesNotExist);
   RUN_TEST(should_FailToRemove_when_FileIsTooShort);
+  RUN_TEST(should_FailToRemove_when_FileIsEmpty);
   RUN_TEST(should_FailToRemove_when_FilePathIsNull);
   RUN_TEST(should_FailToRemoveFromFile_when_CommentIsInvalid);
   RUN_TEST(should_FailToRemove_when_FileContainsNoComment);
   RUN_TEST(should_FailToRemove_when_FileContainsNoRecord);
   RUN_TEST(should_FailToRemove_when_FileHasCommentButNoRecord);
   RUN_TEST(should_FailToRemove_when_BufferIsTooShort);
+  RUN_TEST(should_FailToRemove_when_BufferIsEmpty);
   RUN_TEST(should_FailToRemove_when_BufferIsNull);
   RUN_TEST(should_FailToRemoveFromBuffer_when_CommentIsInvalid);
   RUN_TEST(should_FailToRemove_when_BufferContainsNoComment);
