@@ -1313,7 +1313,7 @@ int SAUCE_fremove(const char* filepath) {
   SAUCEInfo info;
   uint32_t filesize;
   int res = SAUCE_file_get_info(filepath, &info, &filesize, NULL);
-  if (res < 0 || !info.record_exists) return res;
+  if (res < 0 || !info.record_exists) return res; //TODO: should be &&? Add tests for invalid comments
 
   if (info.eof_exists) info.sauce_length++;
   res = SAUCE_file_truncate(filepath, filesize, info.sauce_length, NULL);
@@ -1330,7 +1330,53 @@ int SAUCE_fremove(const char* filepath) {
  *         to get more info on the error.
  */
 int SAUCE_Comment_fremove(const char* filepath) {
-  return -1;
+  SAUCEInfo info;
+  uint32_t filesize;
+  char* buffer = NULL;
+  int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
+  if (res < 0 && !info.record_exists) return res;
+
+  // check info on comment
+  if (info.lines > 0 && !info.comment_exists) {
+    return SAUCE_ECMISS;
+  } else if (!info.comment_exists) {
+    SAUCE_SET_ERROR("%s contains zero comment lines, so no comment can be removed", filepath);
+    return SAUCE_ECMISS;
+  }
+
+  // copy record
+  char record[SAUCE_RECORD_SIZE];
+  memcpy(record, &buffer[info.sauce_length - SAUCE_RECORD_SIZE], SAUCE_RECORD_SIZE);
+  free(buffer);
+  ((SAUCE*)record)->Comments = 0;
+
+  // prep file for writing
+  FILE* file;
+  res = SAUCE_file_truncate(filepath, filesize, info.sauce_length, &file);
+  if (res < 0) return res;
+
+  // write an eof character if needed
+  size_t write;
+  if (!info.eof_exists) {
+    char eof_char = SAUCE_EOF_CHAR;
+    write = fwrite(&eof_char, 1, 1, file);
+    if (write != 1) {
+      fclose(file);
+      free(buffer);
+      SAUCE_SET_ERROR("Failed to write eof character to %s", filepath);
+      return SAUCE_EFFAIL;
+    }
+  }
+
+  // write buffer to file
+  res = fwrite(record, 1, SAUCE_RECORD_SIZE, file);
+  fclose(file);
+  if (res != SAUCE_RECORD_SIZE) {
+    SAUCE_SET_ERROR("Failed to write updated record to %s", filepath);
+    return SAUCE_EFFAIL;
+  }
+
+  return 0;
 }
 
 
