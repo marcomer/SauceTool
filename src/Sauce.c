@@ -1244,10 +1244,8 @@ int SAUCE_fremove(const char* filepath) {
   int res = SAUCE_file_get_info(filepath, &info, &filesize, NULL);
   if (res < 0 || !info.record_exists) return res;
 
-  uint32_t saucesize = filesize - info.start;
-  if (info.eof_exists) saucesize++;
-
-  res = SAUCE_file_truncate(filepath, filesize, saucesize, NULL);
+  if (info.eof_exists) info.sauce_length++;
+  res = SAUCE_file_truncate(filepath, filesize, info.sauce_length, NULL);
   if (res < 0) return res;
 }
 
