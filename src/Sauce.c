@@ -1313,7 +1313,7 @@ int SAUCE_fremove(const char* filepath) {
   SAUCEInfo info;
   uint32_t filesize;
   int res = SAUCE_file_get_info(filepath, &info, &filesize, NULL);
-  if (res < 0 || !info.record_exists) return res; //TODO: should be &&? Add tests for invalid comments
+  if (res < 0 && !info.record_exists) return res;
 
   if (info.eof_exists) info.sauce_length++;
   res = SAUCE_file_truncate(filepath, filesize, info.sauce_length, NULL);
