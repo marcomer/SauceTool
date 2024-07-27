@@ -480,7 +480,7 @@ static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* 
 
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
-    SAUCE_SET_ERROR("Failed to open %s for reading");
+    SAUCE_SET_ERROR("Failed to open %s for reading", filepath);
     return SAUCE_EFOPEN;
   }
 
@@ -719,8 +719,11 @@ int SAUCE_Comment_fread(const char* filepath, char* comment, uint8_t nLines) {
   char* buffer = NULL;
   int res = SAUCE_file_get_info(filepath, &info, NULL, &buffer);
   if (res < 0) {
+    if (buffer != NULL) free(buffer);
     return res;
-  } else if (!info.comment_exists) {
+  }
+  if (!info.comment_exists) {
+    if (buffer != NULL) free(buffer);
     comment[0] = 0;
     return 0;
   }
