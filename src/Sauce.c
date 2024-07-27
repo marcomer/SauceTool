@@ -560,10 +560,11 @@ static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* 
   // write to the dataBuffer
   if (info->comment_exists) {
     *dataBuffer = malloc(SAUCE_TOTAL_SIZE(info->lines));
-    if (info->eof_exists) 
-      memcpy(*dataBuffer, commentBuffer+1, SAUCE_COMMENT_BLOCK_SIZE(info->lines));
-    else
+    if (memcmp(commentBuffer, SAUCE_COMMENT_ID, 5) == 0) {
       memcpy(*dataBuffer, commentBuffer, SAUCE_COMMENT_BLOCK_SIZE(info->lines));
+    } else {
+      memcpy(*dataBuffer, commentBuffer+1, SAUCE_COMMENT_BLOCK_SIZE(info->lines));
+    }
     memcpy(&((*dataBuffer)[SAUCE_COMMENT_BLOCK_SIZE(info->lines)]), &record[record_start], SAUCE_RECORD_SIZE);
   }
   else {
@@ -882,111 +883,75 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
     return SAUCE_ENULL;
   }
 
-  // open file for reading
-  FILE* file = fopen(filepath, "rb");
-  if (file == NULL) {
-    SAUCE_SET_ERROR("Failed to open %s", filepath);
-    return SAUCE_EFOPEN;
-  }
-
-  // get the record from a file
-  char record[SAUCE_RECORD_SIZE + 1];
+  SAUCEInfo info;
   uint32_t filesize = 0;
-  int res = SAUCE_file_find_record(file, record, &filesize);
-  if (res == SAUCE_EFFAIL) {
-    fclose(file);
-    SAUCE_SET_ERROR("Failed to read record from %s", filepath);
-    return SAUCE_EFFAIL;
-  }
+  char* buffer = NULL; // Note: if allocated, will be freed by free(writeBuffer) call
+  int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
+  if (res < 0 && info.record_exists) return res;
 
-  // if record was not found, just append the new record
-  if (res == SAUCE_ERMISS || res == SAUCE_EEMPTY || res == SAUCE_ESHORT) {
-    fclose(file);
-    return SAUCE_file_append_record(filepath, sauce);
-  }
+  uint32_t bufLen = SAUCE_TOTAL_SIZE(info.lines);
 
-  // determine where the record starts
-  uint8_t record_start = 1;
-  if (res == 0 && memcmp(record, SAUCE_RECORD_ID, 5) == 0) record_start = 0;
-
-  // initialize operating buffer
-  uint8_t lines = ((SAUCE*)(&record[record_start]))->Comments;
-  uint32_t bufLen = SAUCE_TOTAL_SIZE(lines) + 1;
-  char* buffer = malloc(bufLen);
-  buffer[0] = SAUCE_EOF_CHAR;
-
-  int eof_exists = 0;
-  if (lines > 0) {
-    // record claims there is a comment, retrieve it
-    char* comment = malloc(SAUCE_COMMENT_BLOCK_SIZE(lines) + 1);
-    res = SAUCE_file_find_comment(file, comment, filesize, lines, lines);
-    if (res == SAUCE_ECMISS) {
-      fclose(file);
-      free(buffer);
-      free(comment);
-      SAUCE_SET_ERROR("Record in %s indicated that %d comment lines existed, but the comment id could not be found", filepath, lines);
-      return SAUCE_ECMISS;
-    } else if (res < 0) {
-      fclose(file);
-      free(buffer);
-      free(comment);
-      return res;
-    }
-
-    if (comment[0] == SAUCE_EOF_CHAR) eof_exists = 1;
-
-    // copy comment and record to buffer
-    if (memcmp(comment, SAUCE_COMMENT_ID, 5) == 0) {
-      memcpy(buffer+1, comment, SAUCE_COMMENT_BLOCK_SIZE(lines));
-    } else {
-      memcpy(buffer, comment, SAUCE_COMMENT_BLOCK_SIZE(lines)+1);
-    }
-    memcpy(buffer+1+SAUCE_COMMENT_BLOCK_SIZE(lines), &record[record_start], SAUCE_RECORD_SIZE);
-    free(comment);
+  char* writeBuffer;
+  if (info.record_exists) {
+    // prepare to replace record
+    writeBuffer = buffer;
+    memcpy(writeBuffer + (bufLen - SAUCE_RECORD_SIZE + 5), &(sauce->Version), SAUCE_RECORD_SIZE-5);
+    ((SAUCE*)(&writeBuffer[bufLen - SAUCE_RECORD_SIZE]))->Comments = info.lines;
   } else {
-    // there is only a record, copy it to buffer
-    if (record[0] == SAUCE_EOF_CHAR) eof_exists = 1;
-    memcpy(buffer+1, &record[record_start], SAUCE_RECORD_SIZE);
+    // prepare to append record
+    if (buffer != NULL) free(buffer);
+    writeBuffer = malloc(SAUCE_RECORD_SIZE);
+    bufLen = SAUCE_RECORD_SIZE;
+    memcpy(writeBuffer, SAUCE_RECORD_ID, 5);
+    memcpy(writeBuffer+5, &(sauce->Version), SAUCE_RECORD_SIZE-5);
+    ((SAUCE*)writeBuffer)->Comments = 0;
   }
 
-  fclose(file);
-
-
-  // write the record to the buffer
-  buffer[0] = SAUCE_EOF_CHAR; // first char always EOF
-  SAUCE_buffer_replace_record(buffer+bufLen-SAUCE_RECORD_SIZE, sauce);
-
-  // open file for reading/writing
-  file = fopen(filepath, "rb+");
-  if (file == NULL) {
-    free(buffer);
-    SAUCE_SET_ERROR("Failed to open %s for reading & writing", filepath);
-    return SAUCE_EFOPEN;
-  }
-
-  // seek to write position
-  if (eof_exists) {
-    if (fseek(file, filesize - bufLen, SEEK_SET) < 0) { // seek to eof char
+  // prepare file for writing
+  FILE* file;
+  if (info.record_exists) {
+    // will need to replace record
+    file = fopen(filepath, "rb+");
+    if (file == NULL) {
+      free(writeBuffer);
+      SAUCE_SET_ERROR("Failed to open %s for reading & writing", filepath);
+      return SAUCE_EFOPEN;
+    }
+    if (fseek(file, info.start, SEEK_SET) < 0) { // seek to beginning of SAUCE data
       fclose(file);
-      free(buffer);
+      free(writeBuffer);
       SAUCE_SET_ERROR("Failed to seek to eof character in %s", filepath);
       return SAUCE_EFFAIL;
     }
   } else {
-    if (fseek(file, filesize - bufLen + 1, SEEK_SET) < 0) { // seek start of comment/record
+    // will need to append record
+    file = fopen(filepath, "ab");
+    if (file == NULL) {
+      free(writeBuffer);
+      SAUCE_SET_ERROR("Failed to open %s for appending", filepath);
+      return SAUCE_EFOPEN;
+    }
+  }
+
+  // write eof if needed
+  size_t write;
+  if (!info.eof_exists) {
+    char eof_char = SAUCE_EOF_CHAR;
+    write = fwrite(&eof_char, 1, 1, file);
+    if (write != 1) {
       fclose(file);
-      free(buffer);
-      SAUCE_SET_ERROR("Failed to seek to start of SAUCE data in %s", filepath);
+      free(writeBuffer);
+      SAUCE_SET_ERROR("Failed to write eof character to %s", filepath);
       return SAUCE_EFFAIL;
     }
   }
 
   // write the new buffer to the file
-  size_t write = fwrite(buffer, 1, bufLen, file);
+  write = fwrite(writeBuffer, 1, bufLen, file);
   fclose(file);
-  free(buffer);
+  free(writeBuffer);
   if (write != bufLen) {
-    SAUCE_SET_ERROR("Failed to write to %s", filepath);
+    SAUCE_SET_ERROR("Failed to write SAUCE data to %s", filepath);
     return SAUCE_EFFAIL;
   }
 
