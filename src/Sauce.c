@@ -1459,7 +1459,10 @@ int SAUCE_Comment_remove(char* buffer, uint32_t n) {
  *         why the check failed.
  */
 int SAUCE_check_file(const char* filepath) {
-  return 0;
+  SAUCEInfo info;
+  int res = SAUCE_file_get_info(filepath, &info, NULL, NULL);
+  if (res < 0) return 0;
+  return 1;
 }
 
 
@@ -1475,7 +1478,10 @@ int SAUCE_check_file(const char* filepath) {
  *         why the check failed.
  */
 int SAUCE_check_buffer(const char* buffer, uint32_t n) {
-  return 0;
+  SAUCEInfo info;
+  int res = SAUCE_buffer_get_info(buffer, n, &info);
+  if (res < 0) return 0;
+  return 1;
 }
 
 
