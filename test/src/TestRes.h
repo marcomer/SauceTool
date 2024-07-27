@@ -68,6 +68,9 @@
 // Result of removing a SAUCE record and CommentBlock from TestFile1.ans
 #define SAUCE_REMOVE_RECORD_AND_COMMENT_PATH  "expect/remove/RemoveBoth.txt"
 
+// Result of removing a SAUCE record from InvalidComment.txt
+#define SAUCE_REMOVE_INVALID_COMMENT_PATH     "expect/remove/RemoveInvalidComment.txt"
+
 // File to contain the actual results of a test remove
 #define SAUCE_REMOVE_ACTUAL_PATH  "actual/remove_actual.txt"
 

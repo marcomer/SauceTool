@@ -125,6 +125,19 @@ void should_RemoveFromFile_when_FileOnlyContainsRecordWithNoEOF() {
 }
 
 
+void should_RemoveFromFile_when_FileContainsInvalidComment() {
+  if (copy_file(SAUCE_INVALIDCOMMENT_PATH, SAUCE_REMOVE_ACTUAL_PATH) != 0) {
+    TEST_FAIL_MESSAGE("Could not copy InvalidComment.txt to remove_actual");
+    return;
+  }
+
+  int res = SAUCE_fremove(SAUCE_REMOVE_ACTUAL_PATH);
+  TEST_ASSERT_EQUAL(0, res);
+
+  TEST_ASSERT_TRUE(test_file_matches_expected(SAUCE_REMOVE_ACTUAL_PATH, SAUCE_REMOVE_INVALID_COMMENT_PATH));
+}
+
+
 
 
 // Successful buffer remove tests
@@ -197,6 +210,20 @@ void should_RemoveFromBuffer_when_BufferOnlyContainsRecordWithNoEOF() {
 
   int res = SAUCE_remove(buffer, length);
   TEST_ASSERT_EQUAL(0, res); // assert that the buffer is empty
+}
+
+
+void should_RemoveFromBuffer_when_BufferContainsInvalidComment() {
+  int length = copy_file_into_buffer(SAUCE_INVALIDCOMMENT_PATH, buffer);
+  if (length <= 0) {
+    TEST_FAIL_MESSAGE("Failed to copy InvalidComment.txt into the buffer");
+    return;
+  }
+
+  int res = SAUCE_remove(buffer, length);
+  TEST_ASSERT_EQUAL(584, res);
+
+  TEST_ASSERT_TRUE(test_buffer_matches_expected(buffer, res, SAUCE_REMOVE_INVALID_COMMENT_PATH));
 }
 
 
@@ -322,11 +349,13 @@ int main(int argc, char** argv) {
   RUN_TEST(should_RemoveFromFile_when_FileContainsCommentAndRecordButNoEOF);
   RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecordAndEOF);
   RUN_TEST(should_RemoveFromFile_when_FileOnlyContainsRecordWithNoEOF);
+  RUN_TEST(should_RemoveFromFile_when_FileContainsInvalidComment);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsRecord);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsCommentAndRecord);
   RUN_TEST(should_RemoveFromBuffer_when_BufferContainsCommentAndRecordButNoEOF);
   RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecordAndEOF);
   RUN_TEST(should_RemoveFromBuffer_when_BufferOnlyContainsRecordWithNoEOF);
+  RUN_TEST(should_RemoveFromBuffer_when_BufferContainsInvalidComment);
   RUN_TEST(should_FailToRemoveFromFile_when_FileDoesNotExist);
   RUN_TEST(should_FailToRemoveFromFile_when_SAUCEIsMissing);
   RUN_TEST(should_FailToRemoveFromFile_when_FileIsTooShort);
