@@ -1336,11 +1336,12 @@ int SAUCE_Comment_fremove(const char* filepath) {
   int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
   if (res < 0 && !info.record_exists) return res;
 
-  // check info on comment
-  if (info.lines > 0 && !info.comment_exists) {
-    return SAUCE_ECMISS;
-  } else if (!info.comment_exists) {
-    SAUCE_SET_ERROR("%s contains zero comment lines, so no comment can be removed", filepath);
+  // check if comment doesn't exist
+  if (!info.comment_exists) {
+    free(buffer);
+    if (info.lines == 0) {
+      SAUCE_SET_ERROR("%s contains zero comment lines, so no comment can be removed", filepath);
+    }
     return SAUCE_ECMISS;
   }
 
