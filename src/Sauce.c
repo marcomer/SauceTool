@@ -573,6 +573,77 @@ static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* 
 }
 
 
+/**
+ * @brief Get info about SAUCE data in a buffer. See SAUCEInfo struct for what info is
+ *        collected. `info` will always be set appropriately, no matter the return condition.
+ * 
+ *        Some info will be irrelevant if certain conditions are not met.
+ *        For example, if no record exists, all other SAUCEInfo fields will be irrelevant.
+ * 
+ * @param buffer a buffer array
+ * @param n the length of the buffer
+ * @param info SAUCEInfo struct which will be filled with info on the SAUCE data
+ * @return 0 on success. A success is when a record is found or a record is found along with an optional valid comment. 
+ *         On error, a negative error code is returned.
+ */
+static int SAUCE_buffer_get_info(const char* buffer, uint32_t n, SAUCEInfo* info) {
+  if (info == NULL) {
+    SAUCE_SET_ERROR("SAUCEInfo struct was NULL");
+    return SAUCE_ENULL;
+  }
+  memset(info, 0, sizeof(SAUCEInfo));
+  
+  if (buffer == NULL) {
+    SAUCE_SET_ERROR("Buffer was NULL");
+    return SAUCE_ENULL;
+  }
+  if (n == 0) {
+    SAUCE_SET_ERROR("Buffer's length is zero and cannot contain a record");
+    return SAUCE_EEMPTY;
+  }
+  if (n < SAUCE_RECORD_SIZE) {
+    SAUCE_SET_ERROR("Buffer's length is too short to contain a record");
+    return SAUCE_ESHORT;
+  }
+
+  // look for record
+  if (memcmp(&buffer[n - SAUCE_RECORD_SIZE], SAUCE_RECORD_ID, 5) != 0) {
+    return SAUCE_ERMISS;
+  }
+  info->record_exists = 1;
+  info->start = n - SAUCE_RECORD_SIZE;
+  info->sauce_length = SAUCE_RECORD_SIZE;
+
+  if (n > SAUCE_RECORD_SIZE && buffer[info->start - 1] == SAUCE_EOF_CHAR) info->eof_exists = 1;
+  info->lines = ((SAUCE*)(&buffer[info->start]))->Comments;
+
+  // look for comment
+  if (info->lines == 0) {
+    info->comment_exists = 0;
+  } else {
+    info->comment_exists = 1;
+    info->eof_exists = 0;
+    uint32_t sauceSize = SAUCE_TOTAL_SIZE(info->lines);
+    if (n < sauceSize) {
+      SAUCE_SET_ERROR("Buffer is too short to contain a comment with %d lines", info->lines);
+      return SAUCE_ESHORT;
+    }
+    if (memcmp(&buffer[n - sauceSize], SAUCE_COMMENT_ID, 5) != 0) {
+      info->comment_exists = 0;
+      SAUCE_SET_ERROR("Record in buffer claims that %d comment lines can be read, but the comment could not be found", info->lines);
+      return SAUCE_ECMISS;
+    }
+
+    // comment found
+    info->start = n - sauceSize;
+    info->sauce_length = sauceSize;
+    if (n > sauceSize && buffer[info->start - 1] == SAUCE_EOF_CHAR) info->eof_exists = 1;
+  }
+
+  return 0;
+}
+
+
 
 
 // Helper Functions
@@ -1274,7 +1345,17 @@ int SAUCE_Comment_fremove(const char* filepath) {
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
 int SAUCE_remove(char* buffer, uint32_t n) {
-  return -1;
+  SAUCEInfo info;
+  int res = SAUCE_buffer_get_info(buffer, n, &info);
+  if (res < 0 && !info.record_exists) return res;
+
+  // erase SAUCE data
+  memset(&buffer[info.start], 0, info.sauce_length);
+  if (info.eof_exists) {
+    buffer[info.start - 1] = 0;
+    return n - info.sauce_length - 1;
+  }
+  return n - info.sauce_length;
 }
 
 
