@@ -102,6 +102,11 @@ void should_FailCheck_when_FileIsTooShort() {
 }
 
 
+void should_FailCheck_when_FileIsEmpty() {
+  TEST_ASSERT_FALSE(SAUCE_check_file(SAUCE_EMPTYFILE_PATH));
+}
+
+
 void should_FailCheckOnFile_when_CommentIsInvalid() {
   TEST_ASSERT_FALSE(SAUCE_check_file(SAUCE_INVALIDCOMMENT_PATH));
 }
@@ -135,6 +140,11 @@ void should_FailCheck_when_BufferIsTooShort() {
   }
 
   TEST_ASSERT_FALSE(SAUCE_check_buffer(buffer, length));
+}
+
+
+void should_FailCheck_when_BufferIsEmpty() {
+  TEST_ASSERT_FALSE(SAUCE_check_buffer(buffer, 0));
 }
 
 
@@ -187,11 +197,13 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailCheck_when_FileDoesNotExist);
   RUN_TEST(should_FailCheck_when_FilePathIsNull);
   RUN_TEST(should_FailCheck_when_FileIsTooShort);
+  RUN_TEST(should_FailCheck_when_FileIsEmpty);
   RUN_TEST(should_FailCheckOnFile_when_CommentIsInvalid);
   RUN_TEST(should_FailCheck_when_FileHasNoRecord);
   RUN_TEST(should_FailCheck_when_FileHasCommentButNoRecord);
   RUN_TEST(should_FailCheck_when_BufferIsNull);
   RUN_TEST(should_FailCheck_when_BufferIsTooShort);
+  RUN_TEST(should_FailCheck_when_BufferIsEmpty);
   RUN_TEST(should_FailCheckOnBuffer_when_CommentIsInvalid);
   RUN_TEST(should_FailCheck_when_BufferHasNoRecord);
   RUN_TEST(should_FailCheck_when_BufferHasCommentButNoRecord);
