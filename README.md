@@ -195,11 +195,11 @@ Functions are provided to remove SAUCE records and CommentBlocks from files/buff
 - Remove a SAUCE CommentBlock from a file.
 - The "Comments" field of the file's SAUCE record will be set to 0.
 
-#### `SAUCE_remove(const char* buffer, uint32_t n)`
+#### `SAUCE_remove(char* buffer, uint32_t n)`
 - Remove a SAUCE Record from the first `n` bytes of a buffer, along with the SAUCE CommentBlock if one exists.
 - The EOF character will be removed as well.
 
-#### `SAUCE_Comment_remove(const char* buffer, uint32_t n)`
+#### `SAUCE_Comment_remove(char* buffer, uint32_t n)`
 - Remove a SAUCE CommentBlock from the first `n` bytes of a buffer.
 - The "Comments" field of the buffer's SAUCE record will be set to 0.
 

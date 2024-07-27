@@ -1273,7 +1273,7 @@ int SAUCE_Comment_fremove(const char* filepath) {
  * @return On success, the new length of the buffer is returned. On error, a negative error code
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
-int SAUCE_remove(const char* buffer, uint32_t n) {
+int SAUCE_remove(char* buffer, uint32_t n) {
   return -1;
 }
 
@@ -1287,7 +1287,7 @@ int SAUCE_remove(const char* buffer, uint32_t n) {
  * @return On success, the new length of the buffer is returned. On error, a negative error code
  *         is returned. Use `SAUCE_get_error()` to get more info on the error.
  */
-int SAUCE_Comment_remove(const char* buffer, uint32_t n) {
+int SAUCE_Comment_remove(char* buffer, uint32_t n) {
   return -1;
 }
 
