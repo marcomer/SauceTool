@@ -470,16 +470,16 @@ typedef struct SAUCEInfo {
  *         On error, a negative error code is returned.
  */
 static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* filesizePtr, char** dataBuffer) {
-  if (filepath == NULL) {
-    SAUCE_SET_ERROR("Filepath was NULL");
-    return SAUCE_ENULL;
-  }
   if (info == NULL) {
     SAUCE_SET_ERROR("SAUCEInfo struct was NULL");
     return SAUCE_ENULL;
   }
-
   memset(info, 0, sizeof(SAUCEInfo));
+
+  if (filepath == NULL) {
+    SAUCE_SET_ERROR("Filepath was NULL");
+    return SAUCE_ENULL;
+  }
 
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
