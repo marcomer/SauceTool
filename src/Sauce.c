@@ -6,7 +6,7 @@
 
 // Static asserts
 #define SAUCE_STATIC_ASSERT(condition, message) \
-    typedef char STATIC_ASSERT_FAILED__##message[2]; typedef char STATIC_ASSERT_FAILED__##message[(condition)?2:1];
+    typedef char STATIC_ASSERT_FAILED__##message[2*!!(condition)-1]
 
 // Assert that the SAUCE struct must be exactly 128 bytes large, which can be achieved by packing the struct
 SAUCE_STATIC_ASSERT(sizeof(SAUCE) == 128, sizeof_SAUCE_struct_must_be_128_bytes);
@@ -1159,7 +1159,7 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
 
 
   // ===== Append a new record =====
-  append:
+  append: {
     // add eof
     buffer[len] = SAUCE_EOF_CHAR;
     len++;
@@ -1173,10 +1173,11 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
     ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments = 0;
 
     return len;
+  }
   // ===== end of append section =====
 
   // ===== Replace the record =====
-  replace:
+  replace: {
     // save Comments field
     uint8_t lines = ((SAUCE*)(&buffer[len-SAUCE_RECORD_SIZE]))->Comments;
 
@@ -1191,6 +1192,7 @@ int SAUCE_write(char* buffer, uint32_t n, const SAUCE* sauce) {
     len = insert_eof_char(buffer, len, lines);
 
     return len;
+  }
   // ===== end of replace section =====
 }
 
@@ -1318,6 +1320,7 @@ int SAUCE_fremove(const char* filepath) {
   if (info.eof_exists) info.sauce_length++;
   res = SAUCE_file_truncate(filepath, filesize, info.sauce_length, NULL);
   if (res < 0) return res;
+  return 0;
 }
 
 
