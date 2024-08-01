@@ -13,10 +13,17 @@
 
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
   #include <unistd.h>
+  #include <sys/types.h>
   #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
     #define POSIX_IS_DEFINED
     #pragma message("Compiling for POSIX system of version 200112L or higher")
   #endif
+#endif
+
+#if defined (_WIN32)
+  #include <windows.h>
+  #include <wchar.h>
+  #define WINDOWS_IS_DEFINED
 #endif
 
 
