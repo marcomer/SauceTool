@@ -323,6 +323,23 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
   }
 
   //TODO: check for windows/posix truncate functions
+  #ifdef POSIX_IS_DEFINED
+    int truncateRes = truncate(filepath, filesize - totalSauceSize);
+    if (truncateRes < 0) {
+      SAUCE_SET_ERROR("Failed to truncate %s using POSIX truncate function", filepath);
+      return SAUCE_EFFAIL;
+    }
+
+    if (writeRef != NULL) {
+      FILE* file = fopen(filepath, "ab");
+      if (file == NULL) {
+        SAUCE_SET_ERROR("Failed to open %s for appending", filepath);
+        return SAUCE_EFOPEN;
+      }
+      *writeRef = file;
+    }
+    return 0;
+  #endif
   
   // open file and temp file
   FILE* file = fopen(filepath, "rb");
