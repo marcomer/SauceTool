@@ -346,8 +346,57 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
       *writeRef = file;
     }
     return 0;
-  #endif
-  
+  #endif // end POSIX_IS_DEFINED
+  #ifdef WINDOWS_IS_DEFINED
+    // convert filepath to wide char string
+    size_t filepathStrLen = strlen(filepath);
+    wchar_t* wideString = malloc((filepathStrLen + 1) * sizeof(wchar_t));
+    wideString[filepathStrLen] = L'\0';
+    if (mbstowcs(wideString, filepath, filepathStrLen) != filepathStrLen) {
+      free(wideString);
+      SAUCE_SET_ERROR("Failed to create wide character string representation of %s filepath", filepath);
+      return SAUCE_EOTHER;
+    }
+
+    // open file
+    HANDLE fh;
+    fh = CreateFileW(wideString, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    free(wideString);
+    if (fh == INVALID_HANDLE_VALUE) {
+      SAUCE_SET_ERROR("Failed to open %s using Windows CreateFileW()", filepath);
+      return SAUCE_EFOPEN;
+    }
+
+    // go to beginning of SAUCE data
+    LARGE_INTEGER li;
+    li.QuadPart = filesize - totalSauceSize;
+    if (SetFilePointerEx(fh, li, NULL, FILE_BEGIN) == 0) {
+      CloseHandle(fh);
+      SAUCE_SET_ERROR("SetFilePointerEx() failed to seek to beginning of SAUCE data in %s", filepath);
+      return SAUCE_EFFAIL;
+    }
+
+    // truncate by setting end of file
+    BOOL endOfFileRes = SetEndOfFile(fh);
+    CloseHandle(fh);
+    if (endOfFileRes == 0) {
+      SAUCE_SET_ERROR("Failed to truncate %s using Windows SetEndOfFile()", filepath);
+      return SAUCE_EFFAIL;
+    }
+
+    // set writeRef if needed
+    if (writeRef != NULL) {
+      FILE* file = fopen(filepath, "ab");
+      if (file == NULL) {
+        SAUCE_SET_ERROR("Failed to open %s for appending", filepath);
+        return SAUCE_EFOPEN;
+      }
+      *writeRef = file;
+    }
+    return 0;
+  #endif // end if WINDOWS_IS_DEFINED
+
+
   // open file and temp file
   FILE* file = fopen(filepath, "rb");
   if (file == NULL) {
