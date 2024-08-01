@@ -10,8 +10,14 @@
 #if defined(__GNUC__) || defined(__llvm__)
   #define USE_ATTRIBUTE
 #endif 
-  
 
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+  #include <unistd.h>
+  #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+    #define POSIX_IS_DEFINED
+    #pragma message("Compiling for POSIX system of version 200112L or higher")
+  #endif
+#endif
 
 
 // Static asserts
