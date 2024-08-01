@@ -4,6 +4,16 @@
 #include <stdarg.h>
 #include "Sauce.h" 
 
+// Compiler and OS defines
+
+//TODO: consider adding MinGW?
+#if defined(__GNUC__) || defined(__llvm__)
+  #define USE_ATTRIBUTE
+#endif 
+  
+
+
+
 // Static asserts
 #define SAUCE_STATIC_ASSERT(condition, message) \
     typedef char STATIC_ASSERT_FAILED__##message[2*!!(condition)-1]
@@ -20,8 +30,10 @@ static char* error_msg = NULL;
 
 // Declarations
 
-static int SAUCE_set_error(const char* format, ...)
-  __attribute__ ((format (printf, 1, 2)));
+#ifdef USE_ATTRIBUTE
+__attribute__((format(printf, 1, 2)))
+#endif
+static int SAUCE_set_error(const char* format, ...);
 
 
 // Set the current error message using the `printf()` family formatting scheme.
