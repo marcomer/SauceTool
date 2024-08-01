@@ -329,7 +329,7 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
     return 0;
   }
 
-  //TODO: check for windows/posix truncate functions
+  // check for windows/posix truncate functions
   #ifdef POSIX_IS_DEFINED
     int truncateRes = truncate(filepath, filesize - totalSauceSize);
     if (truncateRes < 0) {
