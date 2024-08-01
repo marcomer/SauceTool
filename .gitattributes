@@ -1,0 +1,2 @@
+# Test ANSI files should be treated as binary 
+*.ans binary
