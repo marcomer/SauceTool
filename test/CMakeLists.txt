@@ -132,7 +132,7 @@ add_custom_target(copy_expect ALL
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/actual)
 
 # Create all the "actual" files written to by the test suites
-file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/comment_remove_actual.txt)
-file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/comment_write_actual.txt)
-file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/remove_actual.txt)
-file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/write_actual.txt)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/comment_remove_actual.ans)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/comment_write_actual.ans)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/remove_actual.ans)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/actual/write_actual.ans)
