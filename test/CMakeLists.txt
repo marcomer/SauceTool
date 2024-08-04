@@ -6,7 +6,7 @@ add_executable(HelperFunctionTest
   src/TestRes.c
 )
 target_link_libraries(HelperFunctionTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -21,7 +21,7 @@ add_executable(RecordReadTest
   src/TestRes.c
 )
 target_link_libraries(RecordReadTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -36,7 +36,7 @@ add_executable(RecordWriteTest
   src/TestRes.c
 )
 target_link_libraries(RecordWriteTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -51,7 +51,7 @@ add_executable(RecordRemoveTest
   src/TestRes.c
 )
 target_link_libraries(RecordRemoveTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -66,7 +66,7 @@ add_executable(CommentReadTest
   src/TestRes.c
 )
 target_link_libraries(CommentReadTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -81,7 +81,7 @@ add_executable(CommentWriteTest
   src/TestRes.c
 )
 target_link_libraries(CommentWriteTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -96,7 +96,7 @@ add_executable(CommentRemoveTest
   src/TestRes.c
 )
 target_link_libraries(CommentRemoveTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(
@@ -111,7 +111,7 @@ add_executable(CheckTest
   src/TestRes.c
 )
 target_link_libraries(CheckTest
-  Sauce
+  SauceTool
   Unity
 )
 add_test(

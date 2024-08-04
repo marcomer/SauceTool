@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.12)
 
-project("SAUCE" C)
-
 set(CMAKE_C_STANDARD "99")
 
+project("SauceTool" C)
+
 # Add main SAUCE library
-add_library(Sauce STATIC
+add_library(SauceTool STATIC
   src/SauceTool.c
 )
 
-target_include_directories(Sauce PUBLIC
+target_include_directories(SauceTool PUBLIC
   "include/"
 )
 
