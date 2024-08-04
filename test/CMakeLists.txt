@@ -128,6 +128,16 @@ add_custom_target(copy_expect ALL
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Ensure that tests have access to expect/ copy
+add_dependencies(HelperFunctionTest copy_expect)
+add_dependencies(RecordReadTest copy_expect)
+add_dependencies(RecordWriteTest copy_expect)
+add_dependencies(RecordRemoveTest copy_expect)
+add_dependencies(CommentReadTest copy_expect)
+add_dependencies(CommentWriteTest copy_expect)
+add_dependencies(CommentRemoveTest copy_expect)
+add_dependencies(CheckTest copy_expect)
+
 # Create the actual/ directory in the test binary directory
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/actual)
 
