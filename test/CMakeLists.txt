@@ -7,6 +7,8 @@ add_custom_target(copy_expect ALL
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Add a custom target that will depend on all tests being built
+add_custom_target(run_all_tests ALL)
 
 # Create the actual/ directory in the test binary directory
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/actual)
@@ -24,6 +26,8 @@ function(sauce_tool_add_test testname)
   if(${ARGC} EQUAL 0)
     message(FATAL_ERROR "sauce_tool_add_test() must be given a test name")
   endif()
+
+  # create the test suite
   add_executable(${testname}
     "src/${testname}.c" 
     src/TestRes.c
@@ -32,11 +36,16 @@ function(sauce_tool_add_test testname)
     SauceTool
     Unity
   )
-  add_dependencies(${testname} copy_expect)
   add_test(
     NAME ${testname}
     COMMAND ${testname}
   )
+  
+  # make sure expect data files are copied before test suite is built
+  add_dependencies(${testname} copy_expect)
+
+  # require run_all_tests to wait for test suite to build
+  add_dependencies(run_all_tests ${testname})
 endfunction()
 
 
@@ -49,4 +58,12 @@ sauce_tool_add_test(CommentReadTest)
 sauce_tool_add_test(CommentWriteTest)
 sauce_tool_add_test(CommentRemoveTest)
 sauce_tool_add_test(CheckTest)
-message(STATUS "All tests added")
+
+# Create command such that all tests are ran with ctest when all test suites are built
+add_custom_command(
+  TARGET run_all_tests
+  COMMENT "All tests built, running all tests..."
+  POST_BUILD
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIGURATION> --output-on-failure
+)
