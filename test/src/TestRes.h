@@ -1,7 +1,7 @@
 #ifndef SAUCE_TEST_RES_HEADER_INCLUDED
 #define SAUCE_TEST_RES_HEADER_INCLUDED
 #include <stdio.h>
-#include "Sauce.h"
+#include "SauceTool.h"
 
 // Basic files for reading. These files should not be changed
 

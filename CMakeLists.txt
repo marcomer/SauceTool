@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD "99")
 
 # Add main SAUCE library
 add_library(Sauce STATIC
-  src/Sauce.c
+  src/SauceTool.c
 )
 
 target_include_directories(Sauce PUBLIC
