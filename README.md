@@ -1,6 +1,7 @@
 # SauceTool
 The intention of this library is to offer a way to read, write, and remove SAUCE records and comment blocks from files and buffer arrays. This library is written in C and follows the C99 standard.
 
+This project is licensed under the terms of the MIT license. The [Unity Test](https://github.com/ThrowTheSwitch/Unity) is used in this project to provide unit testing. See the Unity directory under this project for the Unity Test MIT license and source code.
 
 ## Table of Contents
 - [Installation](#installation)
