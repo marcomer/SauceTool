@@ -1,7 +1,6 @@
 # SauceTool
 The intention of this library is to offer a way to read, write, and remove SAUCE records and comment blocks from files and buffer arrays. This library is written in C and follows the C99 standard.
 
-This project is licensed under the terms of the MIT license. The [Unity Test](https://github.com/ThrowTheSwitch/Unity) is used in this project to provide unit testing. See the Unity directory under this project for the Unity Test MIT license and source code.
 
 ## Table of Contents
 - [Installation](#installation)
@@ -21,6 +20,7 @@ This project is licensed under the terms of the MIT license. The [Unity Test](ht
 - [Constants](#constants)
 - [Helper Functions](#helper-functions)
 - [Error Codes](#error-codes)
+- [License](#license)
 
 
 ## Installation
@@ -322,3 +322,36 @@ Most functions will return an error code if an error occurs. Remember that you c
 - `SAUCE_EFFAIL` - A file operation failed
 - `SAUCE_EEMPTY` - The given file/buffer was empty
 - `SAUCE_EOTHER` - An error occurred, please call SAUCE_get_error() for latest error message
+
+
+
+
+
+## License
+This project is licensed under the terms of the [MIT license](https://opensource.org/license/MIT). 
+
+MIT License
+
+Copyright (c) 2024 marcomer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+This project uses the [Unity Test](https://github.com/ThrowTheSwitch/Unity) framework which is licensed under the MIT License. See the Unity directory under this project for the Unity Test MIT license and source code.
