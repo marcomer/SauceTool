@@ -1,3 +1,9 @@
+/**
+ * SauceTool
+ * Copyright (c) 2024 marcomer
+ * This project is licensed under the MIT License.
+ */
+
 #ifndef SAUCE_PARSE_HEADER_INCLUDED
 #define SAUCE_PARSE_HEADER_INCLUDED
 #include <stdint.h>

@@ -1,3 +1,9 @@
+/**
+ * SauceTool
+ * Copyright (c) 2024 marcomer
+ * This project is licensed under the MIT License.
+ */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
