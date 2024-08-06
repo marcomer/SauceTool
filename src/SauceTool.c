@@ -19,9 +19,9 @@
 
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
   #include <unistd.h>
-      #include <sys/types.h>
-    #include <sys/stat.h>
   #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+    #include <sys/types.h>
+    #include <sys/stat.h>
     #define POSIX_IS_DEFINED
   #endif
 #endif
@@ -139,6 +139,7 @@ static void SAUCE_buffer_replace_record(char* buffer, const SAUCE* sauce) {
 }
 
 
+#ifdef POSIX_IS_DEFINED
 /**
  * @brief POSIX implementation of `SAUCE_file_find_record()`.
  *      
@@ -203,6 +204,7 @@ static int SAUCE_posix_file_find_record(FILE* file, char* record, int64_t* files
   SAUCE_SET_ERROR("When reading record, only %lu bytes were read", read);
   return SAUCE_EOTHER;
 }
+#endif //POSIX_IS_DEFINED
 
 
 /**
