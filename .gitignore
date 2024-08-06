@@ -2,8 +2,10 @@
 build/
 out/
 
-# Cmake Convenience Script
+# Build and Test Scripts
 run_cmake.sh
+valgrindtest.sh
+valgrindlog.txt
 
 # VSCode properties
 .vscode/
