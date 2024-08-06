@@ -19,10 +19,10 @@
 
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
   #include <unistd.h>
-  #include <sys/types.h>
+      #include <sys/types.h>
+    #include <sys/stat.h>
   #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
     #define POSIX_IS_DEFINED
-    #pragma message("Compiling for POSIX system of version 200112L or higher")
   #endif
 #endif
 
@@ -143,6 +143,72 @@ static void SAUCE_buffer_replace_record(char* buffer, const SAUCE* sauce) {
 
 
 /**
+ * @brief POSIX implementation of `SAUCE_file_find_record()`.
+ *      
+ * 
+ * @param file FILE pointer
+ * @param record array of length SAUCE_RECORD_SIZE + 1
+ * @param filesize size of file to be set; can be NULL; will not be set if SAUCE_EFFAIL is returned
+ * @return 0 on success. If there is no record, SAUCE_ERMISS will be returned. If the file was empty,
+ *         SAUCE_EEMPTY will be returned. Any other error codes that are returned indicate that the file could not be read.
+ */
+static int SAUCE_posix_file_find_record(FILE* file, char* record, int64_t* filesize) {
+  rewind(file);
+  
+  // get filesize
+  int fd = fileno(file);
+  if (fd < 0) {
+    SAUCE_SET_ERROR("Failed to get file descriptor for file");
+    return SAUCE_EFFAIL;
+  }
+
+  struct stat info;
+  if (fstat(fd, &info) < 0) {
+    SAUCE_SET_ERROR("fstat() failed to get info on file");
+    return SAUCE_EFFAIL;
+  }
+
+  if (info.st_size < 0) {
+    SAUCE_SET_ERROR("stat.st_size is negative");
+    return SAUCE_EOTHER;
+  }
+
+  // set file size
+  if (filesize != NULL) *filesize = info.st_size;
+
+  // check for empty file
+  if (info.st_size == 0) return SAUCE_EEMPTY;
+
+  // seek to read position
+  if (info.st_size < SAUCE_RECORD_SIZE) {
+    // get last byte of file
+    if (fseek(file, info.st_size - 1, SEEK_SET) < 0) {
+      SAUCE_SET_ERROR("Failed to seek to last byte of file");
+      return SAUCE_EFFAIL;
+    }
+  } else if (info.st_size > SAUCE_RECORD_SIZE) {
+    if (fseek(file, info.st_size - SAUCE_RECORD_SIZE - 1, SEEK_SET) < 0) {
+      SAUCE_SET_ERROR("Failed to seek to byte before SAUCE record");
+      return SAUCE_EFFAIL;
+    }
+  }
+
+  // read as much as possible
+  size_t read = fread(record, 1, SAUCE_RECORD_SIZE + 1, file);
+  if (read == 1) {
+    return SAUCE_ESHORT;
+  } else if (read == SAUCE_RECORD_SIZE + 1) {
+    return (memcmp(record+1, SAUCE_RECORD_ID, 5) == 0) ? 0 : SAUCE_ERMISS;
+  } else if (read == SAUCE_RECORD_SIZE) {
+    return (memcmp(record, SAUCE_RECORD_ID, 5) == 0) ? 0 : SAUCE_ERMISS;
+  } 
+  
+  SAUCE_SET_ERROR("When reading record, only %lu bytes were read", read);
+  return SAUCE_EOTHER;
+}
+
+
+/**
  * @brief Find a record in a file. If the last 128 bytes of the file are a record, the record and the byte immediately before the record,
  *        if there is such a byte, will be copied to the beginning of `record`. If there is no record, the last byte of the file,
  *        if the file is not empty, will be copied to the beginning of `record`. `filesize` will be set to the file's total length. 
@@ -155,15 +221,19 @@ static void SAUCE_buffer_replace_record(char* buffer, const SAUCE* sauce) {
  * @return 0 on success. If there is no record, SAUCE_ERMISS will be returned. If the file was empty,
  *         SAUCE_EEMPTY will be returned. Any other error codes that are returned indicate that the file could not be read.
  */
-static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) {
+static int SAUCE_file_find_record(FILE* file, char* record, int64_t* filesize) {
+  #ifdef POSIX_IS_DEFINED
+  return SAUCE_posix_file_find_record(file, record, filesize);
+  #endif
+  
   rewind(file);
   
   char buffer[FILE_BUF_READ_SIZE*2 + 1];
   char* curr = &buffer[FILE_BUF_READ_SIZE]; // set curr to middle of buffer
   memset(buffer, 0, FILE_BUF_READ_SIZE*2 + 1);
-
+  
   size_t read = 0;
-  uint32_t total = 0;
+  int64_t total = 0;
 
   while(1) {
     read = fread(curr, 1, FILE_BUF_READ_SIZE, file);
@@ -197,7 +267,7 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
   }
 
   
-  uint32_t record_start = (total < FILE_BUF_READ_SIZE) ? 
+  int64_t record_start = (total < FILE_BUF_READ_SIZE) ? 
                             total - SAUCE_RECORD_SIZE : 
                             (read + FILE_BUF_READ_SIZE) - SAUCE_RECORD_SIZE;
 
@@ -230,7 +300,7 @@ static int SAUCE_file_find_record(FILE* file, char* record, uint32_t* filesize) 
  * @return 0 on success. If the comment ID couldn't be found, then SAUCE_ECMISS will be returned.
  *         Any other returned errors indicate that the file could not be read or could not possibly contain a comment.
  */
-static int SAUCE_file_find_comment(FILE* file, char* comment, uint32_t filesize, uint8_t totalLines, uint8_t lines) {
+static int SAUCE_file_find_comment(FILE* file, char* comment, int64_t filesize, uint8_t totalLines, uint8_t lines) {
   rewind(file);
 
   // check if file is too short
@@ -315,7 +385,7 @@ static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
  *                 If NULL, `writeRef` will not be set and the file will automatically be closed.
  * @return 0 on success. On error, a negative error code is returned.
  */
-static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t totalSauceSize, FILE** writeRef) {
+static int SAUCE_file_truncate(const char* filepath, int64_t filesize, uint16_t totalSauceSize, FILE** writeRef) {
   if (filesize < totalSauceSize) {
     SAUCE_SET_ERROR("The total size of the SAUCE data cannot be greater than the filesize");
     return SAUCE_EOTHER;
@@ -337,7 +407,7 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
 
   // check for windows/posix truncate functions
   #ifdef POSIX_IS_DEFINED
-    int truncateRes = truncate(filepath, filesize - totalSauceSize);
+    int truncateRes = truncate(filepath, filesize - (int64_t)totalSauceSize);
     if (truncateRes < 0) {
       SAUCE_SET_ERROR("Failed to truncate %s using POSIX truncate function", filepath);
       return SAUCE_EFFAIL;
@@ -420,7 +490,7 @@ static int SAUCE_file_truncate(const char* filepath, uint32_t filesize, uint16_t
   // copy file into tempFile
   char buffer[FILE_BUF_READ_SIZE];
   size_t read, write, readSize;
-  uint32_t total = 0;
+  int64_t total = 0;
   
   readSize = FILE_BUF_READ_SIZE;
   while (1) {
@@ -566,7 +636,7 @@ typedef struct SAUCEInfo {
  * @return 0 on success. A success is when a record is found or a record is found along with an optional valid comment. 
  *         On error, a negative error code is returned.
  */
-static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* filesizePtr, char** dataBuffer) {
+static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, int64_t* filesizePtr, char** dataBuffer) {
   if (info == NULL) {
     SAUCE_SET_ERROR("SAUCEInfo struct was NULL");
     return SAUCE_ENULL;
@@ -585,7 +655,7 @@ static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, uint32_t* 
   }
 
   char record[SAUCE_RECORD_SIZE + 1];
-  uint32_t filesize = 0;
+  int64_t filesize = 0;
   int res = SAUCE_file_find_record(file, record, &filesize);
   if (filesizePtr != NULL) *filesizePtr = filesize;
   if (res < 0) {
@@ -832,7 +902,7 @@ int SAUCE_fread(const char* filepath, SAUCE* sauce) {
 
   // get record
   char record[SAUCE_RECORD_SIZE + 1];
-  uint32_t filesize = 0;
+  int64_t filesize = 0;
   int res = SAUCE_file_find_record(file, record, &filesize);
   fclose(file);
   if (res == SAUCE_EEMPTY) {
@@ -1047,9 +1117,8 @@ int SAUCE_fwrite(const char* filepath, const SAUCE* sauce) {
   }
 
   SAUCEInfo info;
-  uint32_t filesize = 0;
   char* buffer = NULL; // Note: if allocated, will be freed by free(writeBuffer) call
-  int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
+  int res = SAUCE_file_get_info(filepath, &info, NULL, &buffer);
   if (res < 0 && info.record_exists) return res;
 
   uint32_t bufLen = SAUCE_TOTAL_SIZE(info.lines);
@@ -1146,7 +1215,7 @@ int SAUCE_Comment_fwrite(const char* filepath, const char* comment, uint8_t line
   if (lines == 0) return 0;
 
   SAUCEInfo info;
-  uint32_t filesize = 0;
+  int64_t filesize = 0;
   char* buffer = NULL;
   int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
   if (res < 0 && !info.record_exists) return res; // we can continue as long as the record exists
@@ -1410,7 +1479,7 @@ int SAUCE_fremove(const char* filepath) {
   }
 
   SAUCEInfo info;
-  uint32_t filesize;
+  int64_t filesize;
   int res = SAUCE_file_get_info(filepath, &info, &filesize, NULL);
   if (res < 0 && !info.record_exists) return res;
 
@@ -1431,7 +1500,7 @@ int SAUCE_fremove(const char* filepath) {
  */
 int SAUCE_Comment_fremove(const char* filepath) {
   SAUCEInfo info;
-  uint32_t filesize;
+  int64_t filesize;
   char* buffer = NULL;
   int res = SAUCE_file_get_info(filepath, &info, &filesize, &buffer);
   if (res < 0 && !info.record_exists) return res;
