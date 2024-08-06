@@ -75,9 +75,6 @@ static int SAUCE_set_error(const char* format, ...) {
   // free the error message
   SAUCE_clear_error();
 
-  //TODO: if using Visual Studio, must be at least 2015
-  //TODO: how do I require that?
-
   // get the length of the formatted string
   va_start(ap, format);
   int len = vsnprintf(NULL, 0, format, ap);
@@ -1618,9 +1615,7 @@ int SAUCE_Comment_remove(char* buffer, uint32_t n) {
 // Functions for performing checks
 
 /**
- * @brief Check if a file contains valid SAUCE data. This will check the SAUCE data against
- *        the SAUCE record and CommentBlock requirements listed in the docs.
- *        TODO: add link to requirements
+ * @brief Check if a file contains SAUCE data.
  * 
  * @param filepath path to a file
  * @return 1 (true) if the file contains valid SAUCE data; 0 (false) if the file does not contain valid
@@ -1636,9 +1631,7 @@ int SAUCE_check_file(const char* filepath) {
 
 
 /**
- * @brief Check if the first `n` bytes of a buffer contain valid SAUCE data. This will check
- *        the data against the SAUCE record and CommentBlock requirements listed in the docs.
- *        TODO: add link to requirements
+ * @brief Check if the first `n` bytes of a buffer contain SAUCE data.
  * 
  * @param buffer pointer to a buffer
  * @param n the length of the buffer
