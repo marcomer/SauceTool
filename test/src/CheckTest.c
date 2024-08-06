@@ -208,5 +208,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailCheck_when_BufferHasNoRecord);
   RUN_TEST(should_FailCheck_when_BufferHasCommentButNoRecord);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

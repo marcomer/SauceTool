@@ -366,5 +366,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsEmpty);
   RUN_TEST(should_FailToRemoveFromBuf_when_BufferIsNULL);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

@@ -260,5 +260,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToRead_when_BufferLengthIsTooShort);
   RUN_TEST(should_FailToRead_when_BufferIsEmpty);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

@@ -349,5 +349,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToWrite_when_BufferIsNull);
   RUN_TEST(should_FailToWrite_when_BufferSauceIsNull);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

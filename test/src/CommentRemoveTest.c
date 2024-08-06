@@ -318,5 +318,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToRemove_when_BufferContainsNoRecord);
   RUN_TEST(should_FailToRemove_when_BufferHasCommentButNoRecord);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

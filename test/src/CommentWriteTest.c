@@ -370,5 +370,6 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailToWriteToBuffer_when_BufferContainsCommentButNoRecord);
   RUN_TEST(should_FailToWriteToBuffer_when_BufferLengthIsZero);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

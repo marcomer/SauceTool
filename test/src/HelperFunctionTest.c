@@ -100,5 +100,6 @@ int main(int argc, char** argv) {
   // SAUCE_set_default() tests
   RUN_TEST(SAUCE_set_default_test_should_SetSAUCEStructToCorrectValues);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }

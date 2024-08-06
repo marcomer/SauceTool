@@ -219,6 +219,7 @@ int main(int argc, char** argv) {
   RUN_TEST(should_FailOnReadBuffer_when_SAUCEPointerIsNULL);
   RUN_TEST(should_FailOnReadBuffer_when_BufferLengthIsZero);
 
+  SAUCE_clear_error();
   return UNITY_END();
 }
 
