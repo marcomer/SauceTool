@@ -160,7 +160,7 @@ static int SAUCE_find_record_helper(FILE* file, char* record, int32_t filesize) 
     return (memcmp(record, SAUCE_RECORD_ID, 5) == 0) ? 0 : SAUCE_ERMISS;
   }
 
-  SAUCE_SET_ERROR("When reading record, only %lu bytes were read", read);
+  SAUCE_SET_ERROR("When reading record, only %u bytes were read", read);
   return SAUCE_EOTHER;
 }
 #endif
@@ -372,7 +372,11 @@ static int SAUCE_file_find_comment(FILE* file, char* comment, int32_t filesize, 
 
   // read comment and possibly the byte immediately before
   int read = fread(comment, 1, SAUCE_COMMENT_BLOCK_SIZE(lines) + 1, file);
-  
+  if (read < SAUCE_COMMENT_BLOCK_SIZE(lines)) {
+    SAUCE_SET_ERROR("Failed to read entire comment in file");
+    return SAUCE_EFFAIL;
+  }
+
   // check for comment id, return if found
   if (memcmp(((filesize == SAUCE_TOTAL_SIZE(lines)) ? comment : comment+1), SAUCE_COMMENT_ID, 5) == 0) {
     return 0;
@@ -709,7 +713,7 @@ static int SAUCE_file_get_info(const char* filepath, SAUCEInfo* info, int32_t* f
     info->eof_exists = 0;
     uint8_t linesToRead = (dataBuffer == NULL) ? 1 : info->lines;
     commentBuffer = malloc(SAUCE_COMMENT_BLOCK_SIZE(info->lines) + 1);
-    res = SAUCE_file_find_comment(file, commentBuffer, filesize, info->lines, info->lines);
+    res = SAUCE_file_find_comment(file, commentBuffer, filesize, info->lines, linesToRead);
     if (res < 0) {
       info->comment_exists = 0;
       if (res == SAUCE_ECMISS) {
