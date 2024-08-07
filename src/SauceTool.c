@@ -160,7 +160,7 @@ static int SAUCE_find_record_helper(FILE* file, char* record, int32_t filesize) 
     return (memcmp(record, SAUCE_RECORD_ID, 5) == 0) ? 0 : SAUCE_ERMISS;
   }
 
-  SAUCE_SET_ERROR("When reading record, only %u bytes were read", read);
+  SAUCE_SET_ERROR("When reading record, only %lu bytes were read", read);
   return SAUCE_EOTHER;
 }
 #endif
