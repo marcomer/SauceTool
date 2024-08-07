@@ -27,8 +27,8 @@ The intention of this library is to offer a way to read, write, and remove SAUCE
 ### Configure and Build
 You can configure and build this repository using the commands below. Note that Release can be replaced with Debug or any other build types provided by CMake.
 ```bash
-git clone https://github.com/marcomer/SAUCE.git
-cd SAUCE
+git clone https://github.com/marcomer/SauceTool.git
+cd SauceTool
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
