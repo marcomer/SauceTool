@@ -33,7 +33,7 @@ install(TARGETS SauceTool
 # create uninstall script & target
 configure_file(cmake/cmake_uninstall.cmake.in cmake_uninstall.cmake @ONLY)
 add_custom_target(uninstall 
-  COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+  COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
 )
 
 # Initialize testing

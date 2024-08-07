@@ -2,8 +2,8 @@
 
 # Add a custom target that copies the expect/ directory to the test binary directory
 add_custom_target(copy_expect ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${CMAKE_SOURCE_DIR}/test/expect ${CMAKE_CURRENT_BINARY_DIR}/expect
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory 
+    "${CMAKE_SOURCE_DIR}/test/expect" "${CMAKE_CURRENT_BINARY_DIR}/expect"
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -65,5 +65,5 @@ add_custom_command(
   COMMENT "All tests built, running all tests..."
   POST_BUILD
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIGURATION> --output-on-failure
+  COMMAND "${CMAKE_CTEST_COMMAND}" -C $<CONFIGURATION> --output-on-failure
 )
