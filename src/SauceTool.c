@@ -1544,7 +1544,6 @@ int SAUCE_Comment_fremove(const char* filepath) {
     write = fwrite(&eof_char, 1, 1, file);
     if (write != 1) {
       fclose(file);
-      free(buffer);
       SAUCE_SET_ERROR("Failed to write eof character to %s", filepath);
       return SAUCE_EFFAIL;
     }
