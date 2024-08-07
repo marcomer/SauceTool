@@ -15,6 +15,13 @@ target_include_directories(SauceTool PUBLIC
   "include/"
 )
 
+target_compile_options(SauceTool PRIVATE
+  $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
+    -Wall>
+  $<$<C_COMPILER_ID:MSVC>:
+    /W4>
+)
+
 
 # Add Unity C testing framework
 add_library(Unity STATIC
