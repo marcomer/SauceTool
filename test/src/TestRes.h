@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "SauceTool.h"
 
+#pragma warning(disable:4113)
+
 // Basic files for reading. These files should not be changed
 
 // TestFile1 -> ANSI file with SAUCE record and comment
