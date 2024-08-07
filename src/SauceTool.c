@@ -11,8 +11,6 @@
 #include "SauceTool.h" 
 
 // Compiler and OS defines
-
-//TODO: consider adding MinGW?
 #if defined(__GNUC__) || defined(__llvm__)
   #define USE_ATTRIBUTE
 #endif 
@@ -119,25 +117,6 @@ void SAUCE_clear_error(void) {
   }
 }
 
-
-/**
- * @brief Replace a record contained in buffer. The buffer must point to the beginning
- *        of the record. The comments field will not be changed.
- * 
- * @param buffer a buffer of length `SAUCE_RECORD_SIZE`
- * @param sauce the SAUCE record to write
- */
-static void SAUCE_buffer_replace_record(char* buffer, const SAUCE* sauce) {
-  // save Comments field
-  uint8_t lines = ((SAUCE*)buffer)->Comments;
-
-  // replace the record
-  memcpy(buffer, SAUCE_RECORD_ID, 5);
-  memcpy(&buffer[5], ((uint8_t*)sauce)+5, SAUCE_RECORD_SIZE - 5);
-  
-  // set comments to original value
-  ((SAUCE*)buffer)->Comments = lines;
-}
 
 #if defined(POSIX_IS_DEFINED) || defined(WINDOWS_IS_DEFINED)
 /**
@@ -401,49 +380,6 @@ static int SAUCE_file_find_comment(FILE* file, char* comment, int32_t filesize, 
 
   // failed to find comment id
   return SAUCE_ECMISS;
-}
-
-
-/**
- * @brief Append a record to a file. File will be opened in "ab" mode. An eof character will
- *        also be included.
- * 
- * @param filepath path to file
- * @param sauce the record to append
- * @return 0 on success. On error, a negative error code is returned.
- */
-static int SAUCE_file_append_record(const char* filepath, const SAUCE* sauce) {
-  size_t write;
-
-  FILE* file = fopen(filepath, "ab");
-  if (file == NULL) {
-    SAUCE_SET_ERROR("Failed to open %s for appending", filepath);
-    return SAUCE_EFOPEN;
-  }
-
-  // write an eof character
-  uint8_t eofchar = SAUCE_EOF_CHAR;
-  write = fwrite(&eofchar, 1, 1, file);
-  if (write != 1) {
-    fclose(file);
-    SAUCE_SET_ERROR("Failed to append an EOF character to %s", filepath);
-    return SAUCE_EFFAIL;
-  }
-
-  char record[SAUCE_RECORD_SIZE];
-  memcpy(record, SAUCE_RECORD_ID, 5);
-  memcpy(record+5, &(sauce->Version), SAUCE_RECORD_SIZE - 5);
-  ((SAUCE*)(record))->Comments = 0;
-
-  // write the SAUCE record
-  write = fwrite(record, 1, SAUCE_RECORD_SIZE, file);
-  fclose(file);
-  if (write != SAUCE_RECORD_SIZE) {
-    SAUCE_SET_ERROR("Failed to append record to %s", filepath);
-    return SAUCE_EFFAIL;
-  }
-
-  return 0;
 }
 
 
