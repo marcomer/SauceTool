@@ -266,13 +266,11 @@ static int SAUCE_windows_file_find_record(FILE* file, char* record, int32_t* fil
  *         SAUCE_EEMPTY will be returned. Any other error codes that are returned indicate that the file could not be read.
  */
 static int SAUCE_file_find_record(FILE* file, char* record, int32_t* filesize) {
-  #ifdef POSIX_IS_DEFINED
+  #if defined(POSIX_IS_DEFINED)
   return SAUCE_posix_file_find_record(file, record, filesize);
-  #endif
-  #ifdef WINDOWS_IS_DEFINED
+  #elif defined(WINDOWS_IS_DEFINED)
   return SAUCE_windows_file_find_record(file, record, filesize);
-  #endif
-
+  #else
   rewind(file);
   
   char buffer[FILE_BUF_READ_SIZE*2 + 1];
@@ -338,6 +336,7 @@ static int SAUCE_file_find_record(FILE* file, char* record, int32_t* filesize) {
   }
 
   return 0;
+  #endif
 }
 
 
@@ -420,7 +419,7 @@ static int SAUCE_file_truncate(const char* filepath, int32_t filesize, uint16_t 
   }
 
   // check for windows/posix truncate functions
-  #ifdef POSIX_IS_DEFINED
+  #if defined(POSIX_IS_DEFINED)
     int truncateRes = truncate(filepath, filesize - (int32_t)totalSauceSize);
     if (truncateRes < 0) {
       SAUCE_SET_ERROR("Failed to truncate %s using POSIX truncate function", filepath);
@@ -436,8 +435,7 @@ static int SAUCE_file_truncate(const char* filepath, int32_t filesize, uint16_t 
       *writeRef = file;
     }
     return 0;
-  #endif // end POSIX_IS_DEFINED
-  #ifdef WINDOWS_IS_DEFINED
+  #elif defined(WINDOWS_IS_DEFINED)
     // convert filepath to wide char string
     size_t filepathStrLen = strlen(filepath);
     wchar_t* wideString = malloc((filepathStrLen + 1) * sizeof(wchar_t));
@@ -484,8 +482,7 @@ static int SAUCE_file_truncate(const char* filepath, int32_t filesize, uint16_t 
       *writeRef = file;
     }
     return 0;
-  #endif // end if WINDOWS_IS_DEFINED
-
+  #else
 
   // open file and temp file
   FILE* file = fopen(filepath, "rb");
@@ -566,6 +563,7 @@ static int SAUCE_file_truncate(const char* filepath, int32_t filesize, uint16_t 
   if (writeRef != NULL) *writeRef = file;
   else fclose(file);
   return 0;
+  #endif
 }
 
 
