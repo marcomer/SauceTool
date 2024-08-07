@@ -108,7 +108,8 @@ This library provides a safe, but possibly slow solution to reading the bytes im
 
 File truncation is also implemented in this library using only C standard functions and by creating temporary files with `tmpfile()`. When compiled on Windows or POSIX systems, no temporary files will be created. Instead, files will be quickly truncated using standard functions from Windows or POSIX.
 
-
+#### File Size
+Currently, files over 2GB are not supported by this project.
 
 
 ## Reading
