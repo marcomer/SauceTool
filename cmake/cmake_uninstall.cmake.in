@@ -15,3 +15,15 @@ foreach(file ${files})
         message(FATAL_ERROR "Problem when removing \"$ENV{DESTDIR}${file}\"")
     endif (NOT ${rm_retval} EQUAL 0)
 endforeach()
+
+# Remove SauceTool include install directory
+message(STATUS "Removing directory \"@CMAKE_INSTALL_PREFIX@/@SAUCETOOL_INSTALL_INCLUDEDIR@\"")
+execute_process(
+    COMMAND "@CMAKE_COMMAND@" -E rm -R "@CMAKE_INSTALL_PREFIX@/@SAUCETOOL_INSTALL_INCLUDEDIR@"
+    OUTPUT_VARIABLE rm_out
+    RESULT_VARIABLE rm_retval
+)
+
+if(NOT ${rm_retval} EQUAL 0)
+    message(FATAL_ERROR "Could not remove directory \"@CMAKE_INSTALL_PREFIX@/@SAUCETOOL_INSTALL_INCLUDEDIR@\"")
+endif (NOT ${rm_retval} EQUAL 0)
